@@ -291,3 +291,12 @@ For details, see [scripts/README.md](scripts/README.md)
 | Testing | `test-engineer` | testing-patterns, webapp-testing |
 | Debug | `debugger` | systematic-debugging |
 | Plan | `project-planner` | brainstorming, plan-writing |
+
+---
+
+## 🎨 Skills curadas externas (`curated/`)
+
+Skills de design/UI mantidas em pasta separada e sincronizadas dos repositórios de origem.
+Índice para a IA: `curated/design-ui/INDEX.md`. Fontes: `curated/sources.json`; versões em uso: `curated/sources.lock.json`.
+Atualizar: `python scripts/sync_external.py` (ou `update-external-skills.ps1`). Também roda semanalmente via GitHub Actions (`sync-external-skills.yml`).
+Várias dessas skills também existem em `skills/` (versão da biblioteca Awesome); a cópia em `curated/` é a fonte oficial atualizada.

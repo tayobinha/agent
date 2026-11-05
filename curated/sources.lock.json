@@ -1,0 +1,62 @@
+{
+  "frontend-design": {
+    "repo": "anthropics/skills",
+    "path": "skills/frontend-design",
+    "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+    "synced_at": "2026-11-05"
+  },
+  "ui-ux-pro-max": {
+    "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+    "path": ".claude/skills/ui-ux-pro-max",
+    "commit": "b7d5353e0130feb8c5574ef1251f8a1db1873ccb",
+    "synced_at": "2026-11-05"
+  },
+  "impeccable": {
+    "repo": "pbakaus/impeccable",
+    "path": "plugin/skills/impeccable",
+    "commit": "c8891a9ae865d6ee311836ae5199bfce0fe115b1",
+    "synced_at": "2026-11-05"
+  },
+  "emil-design-eng": {
+    "repo": "emilkowalski/skills",
+    "path": "skills/emil-design-eng",
+    "commit": "c8a79627b59d72d764d6ab6f2c87c09a48169833",
+    "synced_at": "2026-11-05"
+  },
+  "create-design-md": {
+    "repo": "ibelick/ui-skills",
+    "path": "skills/create-design-md",
+    "commit": "73fb128d046d1f0d74c2909cd26eb616e3415567",
+    "synced_at": "2026-11-05"
+  },
+  "review-animations": {
+    "repo": "emilkowalski/skills",
+    "path": "skills/review-animations",
+    "commit": "c8a79627b59d72d764d6ab6f2c87c09a48169833",
+    "synced_at": "2026-11-05"
+  },
+  "mobile-native": {
+    "repo": "emilkowalski/skills",
+    "path": "skills/mobile-native",
+    "commit": "c8a79627b59d72d764d6ab6f2c87c09a48169833",
+    "synced_at": "2026-11-05"
+  },
+  "break-ui": {
+    "repo": "emilkowalski/skills",
+    "path": "skills/break-ui",
+    "commit": "c8a79627b59d72d764d6ab6f2c87c09a48169833",
+    "synced_at": "2026-11-05"
+  },
+  "web-design-guidelines": {
+    "repo": "vercel-labs/agent-skills",
+    "path": "skills/web-design-guidelines",
+    "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+    "synced_at": "2026-11-05"
+  },
+  "webapp-testing": {
+    "repo": "anthropics/skills",
+    "path": "skills/webapp-testing",
+    "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+    "synced_at": "2026-11-05"
+  }
+}

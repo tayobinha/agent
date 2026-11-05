@@ -1,0 +1,15 @@
+{
+  "category": "design-ui",
+  "skills": [
+    {"name": "frontend-design", "repo": "anthropics/skills", "path": "skills/frontend-design", "ref": "main", "purpose": "Definir direção artística: tipografia, cores e composição adaptadas ao produto"},
+    {"name": "ui-ux-pro-max", "repo": "nextlevelbuilder/ui-ux-pro-max-skill", "path": ".claude/skills/ui-ux-pro-max", "ref": "main", "purpose": "Paletas, pares de fontes e recomendações UX conforme o projeto"},
+    {"name": "impeccable", "repo": "pbakaus/impeccable", "path": "plugin/skills/impeccable", "ref": "main", "purpose": "Auditar design, clarificar textos e revisão final (critique, clarify, polish)"},
+    {"name": "emil-design-eng", "repo": "emilkowalski/skills", "path": "skills/emil-design-eng", "ref": "main", "purpose": "Botões, transições e pequenos detalhes que deixam a interface agradável"},
+    {"name": "create-design-md", "repo": "ibelick/ui-skills", "path": "skills/create-design-md", "ref": "main", "purpose": "Documentar regras visuais num DESIGN.md coerente para o agente"},
+    {"name": "review-animations", "repo": "emilkowalski/skills", "path": "skills/review-animations", "ref": "main", "purpose": "Detectar animações lentas, curvas ruins e movimento desnecessário"},
+    {"name": "mobile-native", "repo": "emilkowalski/skills", "path": "skills/mobile-native", "ref": "main", "purpose": "Detalhes de web app no celular: toque, scroll, zoom de campos, área do entalhe"},
+    {"name": "break-ui", "repo": "emilkowalski/skills", "path": "skills/break-ui", "ref": "main", "purpose": "Testar telas com nomes longos, listas vazias e dados que estouram o layout"},
+    {"name": "web-design-guidelines", "repo": "vercel-labs/agent-skills", "path": "skills/web-design-guidelines", "ref": "main", "purpose": "Verificar acessibilidade, formulários, foco e estados da interface"},
+    {"name": "webapp-testing", "repo": "anthropics/skills", "path": "skills/webapp-testing", "ref": "main", "purpose": "Testar fluxos no navegador com Playwright, inspecionar erros e capturar telas"}
+  ]
+}
