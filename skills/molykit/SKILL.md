@@ -7,7 +7,7 @@ description: |
   Chat widget, Messages, PromptInput, Avatar, LLM
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
 
 # MolyKit Skill
@@ -34,6 +34,10 @@ MolyKit provides:
 - OpenAI-compatible client with SSE streaming
 - Protocol types for messages, bots, and tool calls
 - MCP (Model Context Protocol) support
+
+## Version and trust boundaries
+
+The author-local source path and `llms.txt` below are not bundled. Locate the installed MolyKit revision and verify its signatures before adapting these partial Rust sketches; ellipses and trait declarations are not standalone compilable programs. ThreadToken does not make arbitrary thread-local values safely accessible from any native thread: obey the implementation's originating-thread constraints. Keep provider keys in a native/server secret store, never a browser/WASM bundle. Treat model tool calls and attachments as untrusted input requiring application authorization. SSE parsing must buffer across chunk boundaries, handle CRLF/multiline data, cancellation and size limits; splitting individual network chunks on two newlines is insufficient.
 
 ## Cross-Platform Async Patterns
 
@@ -130,7 +134,7 @@ pub trait BotClient: Send {
 }
 
 // Usage
-let client = OpenAIClient::new("https://api.openai.com/v1".into());
+let mut client = OpenAIClient::new("https://api.openai.com/v1".into());
 client.set_key("sk-...")?;
 let context = BotContext::from(client);
 ```

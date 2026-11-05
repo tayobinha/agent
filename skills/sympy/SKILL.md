@@ -6,7 +6,7 @@ metadata:
     skill-author: K-Dense Inc.
 risk: safe
 source: "https://github.com/sympy/sympy"
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
 
 # SymPy - Symbolic Mathematics in Python
@@ -50,7 +50,7 @@ df_dx = diff(f, x)
 
 ### Example 3: Evaluate Integral
 ```python
-from sympy import symbols, integrate, exp
+from sympy import symbols, integrate, exp, oo
 x = symbols('x')
 integral = integrate(x * exp(-x**2), (x, 0, oo))
 # 1/2

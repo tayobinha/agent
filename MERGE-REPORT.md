@@ -38,3 +38,9 @@ Este repositório (`agent`) é a base. Para skills com o mesmo nome em `tayobinh
 
 ## Skills de design (curated/design-ui)
 As 10 skills pedidas foram adicionadas em `curated/design-ui/` com sync automático. Já existiam também em `skills/` (versão da biblioteca Awesome, possivelmente desatualizada): frontend-design, emil-design-eng, review-animations, ui-ux-pro-max, web-design-guidelines, webapp-testing. Novas no repositório: impeccable, create-design-md, mobile-native, break-ui. As cópias antigas em `skills/` não foram removidas.
+
+## Limpeza e sincronização (2026-11-05)
+- Removidas de `skills/` as cópias antigas: frontend-design, webapp-testing, emil-design-eng, review-animations, web-design-guidelines, ui-ux-pro-max (fonte oficial agora em `curated/design-ui/`).
+- Scripts próprios preservados em `scripts/design-checks/` (ux_audit, accessibility_checker, playwright_runner); guias extras em `.shared/frontend-design/`.
+- Upstream sickn33/antigravity-awesome-skills @ 739c841: 304 skills novas, 2.328 atualizadas, 194 sem mudança (1.831 arquivos novos, 5.006 alterados). Total: 2.876 skills.
+- Skills curadas (10 origens): já estavam na versão mais recente (nenhuma atualização).

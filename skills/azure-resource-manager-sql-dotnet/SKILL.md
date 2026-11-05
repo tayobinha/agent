@@ -5,6 +5,9 @@ risk: critical
 source: community
 date_added: '2026-02-27'
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # Azure.ResourceManager.Sql (.NET)
 
@@ -21,7 +24,7 @@ dotnet add package Azure.ResourceManager.Sql
 dotnet add package Azure.Identity
 ```
 
-**Current Versions**: Stable v1.3.0, Preview v1.4.0-beta.3
+**Version boundary:** These are illustrative fragments, not a compiled project. Pin the intended SDK version and check its API reference and regional SKU availability before adapting; no current-version claim is established here.
 
 ## Environment Variables
 
@@ -69,6 +72,8 @@ ArmClient
 
 ## Core Workflow
 
+Confirm subscription, tenant, resource group, exact target, SKU budget and production-change scope before any write. Read current state and use update/patch semantics appropriate to the pinned SDK; a sparse CreateOrUpdate payload is not proof that omitted settings are preserved. Management authentication does not grant SQL data-plane access. Do not log passwords, connection strings or storage keys. Private networking requires endpoint, DNS and routing setup; disabling public access alone does not establish connectivity.
+
 ### 1. Create SQL Server
 
 ```csharp
@@ -87,7 +92,7 @@ var serverData = new SqlServerData(AzureLocation.EastUS)
     AdministratorLoginPassword = Environment.GetEnvironmentVariable("SQL_ADMIN_PASSWORD") ?? throw new InvalidOperationException("SQL_ADMIN_PASSWORD is required"),
     Version = "12.0",
     MinimalTlsVersion = SqlMinimalTlsVersion.Tls1_2,
-    PublicNetworkAccess = ServerNetworkAccessFlag.Enabled
+    PublicNetworkAccess = ServerNetworkAccessFlag.Disabled // configure approved private endpoint and DNS separately
 };
 
 // Create server (long-running operation)
@@ -163,6 +168,9 @@ await databaseCollection.CreateOrUpdateAsync(
 ### 5. Configure Firewall Rules
 
 ```csharp
+// OPTIONAL broad exception: 0.0.0.0 permits connections from Azure services
+// outside this subscription too; it is not a tenant-only firewall rule. Do not
+// apply by default. With public access disabled these rules do not enable it.
 // Allow Azure services
 var azureServicesRule = new SqlFirewallRuleData
 {
@@ -214,8 +222,8 @@ await foreach (var ep in server.GetElasticPools())
 ### 7. Get Connection String
 
 ```csharp
-// Build connection string (server FQDN is predictable)
-var serverFqdn = $"{server.Data.Name}.database.windows.net";
+// Use returned FQDN; sovereign cloud suffixes can differ.
+var serverFqdn = server.Data.FullyQualifiedDomainName;
 var connectionString = $"Server=tcp:{serverFqdn},1433;" +
     $"Initial Catalog={database.Data.Name};" +
     "Persist Security Info=False;" +
@@ -292,7 +300,8 @@ try
 }
 catch (RequestFailedException ex) when (ex.Status == 409)
 {
-    Console.WriteLine("Server already exists");
+    Console.WriteLine($"Conflict: {ex.ErrorCode}; inspect the resource and operation state");
+    throw; // 409 does not necessarily mean an existing matching server
 }
 catch (RequestFailedException ex) when (ex.Status == 400)
 {

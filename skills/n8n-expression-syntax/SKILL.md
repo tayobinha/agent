@@ -3,12 +3,16 @@ name: n8n-expression-syntax
 description: Validate n8n expression syntax and fix common errors. Use when writing n8n expressions, using {{}} syntax, accessing $json/$node variables, troubleshooting expression errors, or working with webhook data in workflows.
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
 
 # n8n Expression Syntax
 
 Expert guide for writing correct n8n expressions in workflows.
+
+## Execution and data scope
+
+EXAMPLES.md and COMMON_MISTAKES.md referenced below/in the guide are not bundled. `$json` in expression parameters represents the current input item, not a completed current node output; inspect actual execution data and item linking before referencing another node. Code-node APIs differ between per-item and all-items modes. Use credentials for secrets: the guide's `$env` examples can expose values and may be disabled. Avoid putting secrets/personal webhook data into messages or logs. Encode URL path/query components, guard missing arrays/objects and validate untrusted values before downstream actions. Test expressions with synthetic input; preview success is not authorization to send Slack/email messages.
 
 ## Detailed Guide
 

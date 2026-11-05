@@ -134,15 +134,13 @@ calls for themselves — a quota probe, a session-naming request — and a repla
 
 ### 5. Only then consider comparing models
 
-`orca_compare` forks one run onto several models from the same checkpoint: same files, same
-conversation prefix, so the model is the only variable. Pick the fork point with `orca_checkpoints`
+`orca_compare` forks one run onto several models from the same checkpoint: the same recorded files and conversation prefix. Provider settings, tool timing and external state can still differ; the model is not necessarily the only variable. Pick the fork point with `orca_checkpoints`
 and pass it as `from`.
 
 Grade with `verify` — a shell command whose exit code is the verdict. Use something the repository
 already declares (`"npm test"`, `"npm run typecheck"`) or an explicitly local binary
 (`"./node_modules/.bin/tsc --noEmit"`). **Do not reach for `npx <tool>` here.** If the tool is not
-installed locally, npx fetches whatever the registry has under that name and runs it — and `npx tsc`
-in particular resolves `tsc`, a package deprecated in 2016, not TypeScript. That would download and
+installed locally, npx fetches whatever the registry has under that name and runs it — and if no local TypeScript binary exists, `npx tsc` can resolve the unrelated `tsc` package rather than TypeScript. That would download and
 execute unreviewed code inside the very step the install gate above exists to prevent.
 
 **`orca_compare` uploads the recording to other people's models, and spends real money doing it.**
@@ -180,56 +178,11 @@ If `orca` is already installed:
 orca record claude           # or codex, opencode, openclaw, grok
 ```
 
-If it is not, **do not download and install in one step.** `npm install -g` runs whatever
-`preinstall` / `install` / `postinstall` scripts the resolved tree declares, with the user's
-privileges. Pinning the top-level version fixes *which* release of `orcareplay` you get, not what
-its dependencies resolve to, and not whether any of it was reviewed.
+## External tool prerequisite
 
-1. **Ask before downloading.** Then resolve the tree into a directory of its own with lifecycle
-   scripts disabled, so nothing from it executes:
+Use only an already installed tool whose exact version, complete dependency tree and integrity have been reviewed. This skill does not bootstrap tools or activate external plugins. If the prerequisite is missing, stop that executable path and report it; continue with static analysis when possible. A separate installation task must pin immutable artifacts, stage them outside active agent directories with lifecycle scripts disabled, inspect every bundled file and executable entry point (including tests and hooks), and obtain approval before activation or host configuration changes. Do not substitute a same-named workspace script or fetch a moving branch.
 
-   ```console
-   REVIEW=~/.cache/orca-review
-   npm install orcareplay@0.1.2 --prefix "$REVIEW" --ignore-scripts
-   ```
 
-   Keep this directory. It is not a throwaway — it is the thing you are going to activate.
-
-2. **Inspect every manifest, not the top level.** npm hoists, so scoped packages sit one level
-   deeper and duplicated versions sit deeper still. A `*/package.json` glob silently skips both:
-
-   ```console
-   cd "$REVIEW/node_modules"
-   find . -name package.json | wc -l                       # manifests actually present
-   find . -name package.json -exec grep -l \
-     'preinstall\|postinstall\|"install"' {} +              # install-time hooks
-   ls -l .bin                                              # what reaches PATH
-   head -5 .bin/orca                                       # follow one: symlink or shim
-   grep -rl 'child_process\|execSync\|spawnSync' --include=*.js --include=*.mjs --include=*.cjs .
-   grep -rl "node:https\|node:net\|node:tls\|require('https')" --include=*.js --include=*.mjs .
-   grep -rlE 'process\.env\.[A-Z_]*(KEY|TOKEN|SECRET|PASSWORD)' --include=*.js --include=*.mjs .
-   ```
-
-   Report the counts and the package names each scan returns, from this run — not from a previous
-   one and not from this file, because dependency ranges make the tree differ between installs.
-
-   **Say what this is.** It is a surface scan of roughly a thousand files: manifests, hooks, what
-   lands on `PATH`, and which packages touch subprocesses, the network, or credential-shaped
-   environment variables. It is not a source audit, and it will not catch obfuscated or
-   dynamically-constructed behaviour. Report it as what it is. If the threat model needs more than
-   that, say so and let the user decide, rather than implying the tree has been read.
-
-3. **Ask again, then activate the tree you just reviewed.** It is already a working install:
-
-   ```console
-   "$REVIEW/node_modules/.bin/orca" record claude
-   ```
-
-   `npm i -g orcareplay@0.1.2` and `npx orcareplay@0.1.2` both **re-resolve** the dependency tree at
-   that moment, so either can pull a transitive version that was not in the tree you inspected — and
-   a global install runs its hooks. `$REVIEW/package-lock.json` records the exact tree that was
-   reviewed; if a global install is genuinely wanted, review it again against that lock rather than
-   treating this approval as covering it.
 
 `orca record <agent>` runs the agent unmodified behind a local proxy. Nothing about the agent
 changes; two environment variables get set. Recording a session now is what makes the next "why did
@@ -242,8 +195,7 @@ papering over it.
 
 ## Sharing a run with someone else
 
-`orca export last -o run.html` writes one self-contained file. `orca scrub` removes anything
-sensitive first. Traces hold whatever the run held, so scrub before sending a recording anywhere.
+`orca export last -o run.html` writes one self-contained file. use `orca scrub` and manually inspect the export for remaining sensitive information before sharing. Automated scrubbing cannot guarantee complete removal. Traces hold whatever the run held, so scrub before sending a recording anywhere.
 
 ## Limitations
 
@@ -251,8 +203,7 @@ sensitive first. Traces hold whatever the run held, so scrub before sending a re
   nothing here recovers them. The answer to "why did it do that" in an unrecorded session is
   honestly "there is no recording", not a reconstruction.
 - **A typed session replays approximately, not exactly.** Prompts entered at a terminal were never
-  on the wire; orca recovers them from the harness's own transcript. Only a run started with the
-  prompt in argv (`orca record claude -- -p "…"`) replays byte-for-byte.
+  on the wire; orca recovers them from the harness's own transcript. A prompt in argv may improve capture fidelity, but does not establish byte-for-byte reproduction of subprocesses or external state.
 - **Some turns are not repeated.** A harness makes calls for itself — a quota probe, a
   session-naming request — and a replay steps over them. Tools that need a person
   (`AskUserQuestion`, plan mode) are absent when the same agent runs without one, which can make a

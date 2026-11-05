@@ -21,11 +21,14 @@ date_added: "2026-02-27"
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 Orchestrate full-stack feature development across backend, frontend, and infrastructure layers with modern API-first approach:
 
 [Extended thinking: This workflow coordinates multiple specialized agents to deliver a complete full-stack feature from architecture through deployment. It follows API-first development principles, ensuring contract-driven development where the API specification drives both backend implementation and frontend consumption. Each phase builds upon previous outputs, creating a cohesive system with proper separation of concerns, comprehensive testing, and production-ready deployment. The workflow emphasizes modern practices like component-driven UI development, feature flags, observability, and progressive rollout strategies.]
+
+## Scope and evidence contract
+
+Confirm feature, acceptance examples, stack and authorized deployment target. Task tool and subagent names are environment-specific placeholders: use available tools and authorized delegation with disjoint ownership/integration contracts. Review/design output is not executed tests, penetration results, WCAG compliance or production certification. Record actual commands/results and unresolved risks. Stage migrations with backups/compatibility, verify tenant/auth boundaries, and obtain authorization for publication, infrastructure, external telemetry or paid services. Choose relevant phases only; zero-downtime and compliance claims need deployment-specific evidence.
 
 ## Phase 1: Architecture & Design Foundation
 

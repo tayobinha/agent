@@ -19,6 +19,12 @@ A critical guide for developers transitioning from Godot 3.x to Godot 4. This sk
 - Use when replacing deprecated nodes (like `Tween` node vs `create_tween`).
 - Use when updating `export` variables to `@export` annotations.
 
+## Migration procedure
+
+Work in a backed-up branch or copy. Choose an exact Godot 4 version, validate conversion before changing files, and inspect converter gaps, renamed nodes, shaders, physics, plugins and export targets. Test scenes and saved games before replacing the working Godot 3 build. Examples below are fragments in an appropriate Node script; `Enemy` must be a declared project type.
+
+Official guide: [Upgrading to Godot 4](https://docs.godotengine.org/en/stable/tutorials/migrating/upgrading_to_godot_4.html).
+
 ## Key Changes
 
 ### 1. Annotations (`@`)
@@ -42,7 +48,9 @@ func set_health(value):
 
 **Godot 4:**
 ```gdscript
-var health: int:
+signal health_changed(health: int)
+
+var health: int = 100:
     set(value):
         health = value
         emit_signal("health_changed", health)
@@ -52,7 +60,7 @@ var health: int:
 
 ### 3. Tween System
 
-The `Tween` node is deprecated. Use `create_tween()` in code.
+The Godot 3 `Tween` node was removed in Godot 4. Use `create_tween()` in code.
 
 **Godot 3:**
 ```gdscript
@@ -85,7 +93,7 @@ pressed.connect(_on_pressed)
 
 ### Example 1: Typed Arrays
 
-GDScript 2.0 supports typed arrays for better performance and type safety.
+GDScript 2.0 supports typed arrays for type checking; measure performance rather than assuming a speedup.
 
 ```gdscript
 # Godot 3
@@ -117,14 +125,14 @@ await get_tree().create_timer(1.0).timeout
 ## Best Practices
 
 - ✅ **Do:** Use `@export_range`, `@export_file`, etc., for better inspector UI.
-- ✅ **Do:** Type all variables (`var x: int`) for performance gains in GDScript 2.0.
+- ✅ **Do:** Use static types (`var x: int`) for clearer contracts and type checking; measure performance in the target engine and workload.
 - ✅ **Do:** Use `super()` to call parent methods instead of `.function_name()`.
 - ❌ **Don't:** Use string names for signals (`emit_signal("name")`) if you can use the signal object (`name.emit()`).
 
 ## Troubleshooting
 
 **Problem:** "Identifier 'Tween' is not a valid type."
-**Solution:** `Tween` is now `SceneTreeTween` or just an object returned by `create_tween()`. You rarely type it explicitly, just use `var tween = create_tween()`.
+**Solution:** Godot 4 uses a `Tween` object returned by `create_tween()`, not a scene node or a `SceneTreeTween` type. Use `var tween: Tween = create_tween()` in a Node context.
 
 ## Limitations
 - Use this skill only when the task clearly matches the scope described above.

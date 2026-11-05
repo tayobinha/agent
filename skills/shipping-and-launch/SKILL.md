@@ -9,6 +9,17 @@ date_added: 2026-07-01
 license: MIT
 license_source: https://github.com/addyosmani/agent-skills/blob/main/LICENSE
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/definition-of-done.md`
+- `<support-root>/references/security-checklist.md`
+- `<support-root>/references/performance-checklist.md`
+- `<support-root>/references/accessibility-checklist.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/addyosmani/agent-skills), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Shipping and Launch
 
@@ -80,6 +91,8 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 - [ ] ADRs written for any architectural decisions
 - [ ] Changelog updated
 - [ ] User-facing documentation updated (if applicable)
+
+Treat the rollout percentages, windows and response-time targets below as examples requiring workload-specific SLOs and sufficient sample sizes. Automated scanners do not establish full security or accessibility compliance. A feature flag changes exposure; it cannot undo persisted data, sent notifications or third-party effects.
 
 ## Feature Flag Strategy
 
@@ -196,7 +209,12 @@ Client metrics:
 
 ```typescript
 // Set up error boundary with reporting
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component<React.PropsWithChildren, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // Report to error tracking service
     reportError(error, {
@@ -218,7 +236,7 @@ class ErrorBoundary extends React.Component {
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   reportError(err, {
     method: req.method,
-    url: req.url,
+    path: req.path, // omit query parameters that may contain secrets
     userId: req.user?.id,
   });
 
@@ -257,12 +275,12 @@ Every deployment needs a rollback plan before it happens:
 ### Rollback Steps
 1. Disable feature flag (if applicable)
    OR
-1. Deploy previous version: `git revert <commit> && git push`
+1. Redeploy a known-good artifact through the approved deployment workflow; a Git revert alone does not deploy
 2. Verify rollback: health check, error monitoring
 3. Communicate: notify team of rollback
 
 ### Database Considerations
-- Migration [X] has a rollback: `npx prisma migrate rollback`
+- Migration [X]: document a tested compensating migration or restore plan; Prisma Migrate has no general `migrate rollback` command
 - Data inserted by new feature: [preserved / cleaned up]
 
 ### Time to Rollback

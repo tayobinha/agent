@@ -5,6 +5,17 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
+## Supporting material availability
+
+These paths remain unavailable in this catalog copy:
+
+- `<support-root>/assets/cost-analysis-template.xlsx`
+
+Do not invoke a step that requires one of these files. Obtain the original material and review its dependencies, license, and effects before use. Independent inline steps and the bundled helpers can proceed within the user’s authorized scope.
 
 # Cloud Cost Optimization
 
@@ -20,7 +31,6 @@ Strategies and patterns for optimizing cloud costs across AWS, Azure, and GCP.
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Purpose
 
@@ -33,6 +43,10 @@ Implement systematic cost optimization strategies to reduce cloud spending while
 - Implement cost governance
 - Optimize multi-cloud costs
 - Meet budget constraints
+
+## Evidence and irreversible commitments
+
+All discount percentages/terms and example instance sizes below are historical illustrations, not current quotes or workload recommendations. Verify provider/region/service eligibility and actual effective utilization before buying commitments; reservations/discount plans are financial commitments with changing exchange/cancellation rules. Use read-only billing/utilization first, compare equal workload/reliability windows and include egress, storage minimums, retrieval, taxes and idle costs. Deletion/lifecycle expiry, downsizing and alert subscriptions require exact-target authorization and tested recovery. Budget alerts are notifications, not a spending cap; serverless can retain baseline/storage/provisioned costs.
 
 ## Cost Optimization Framework
 

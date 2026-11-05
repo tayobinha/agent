@@ -27,7 +27,6 @@ date_added: '2026-02-27'
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 You are an E-E-A-T specialist analyzing content for authority and trust signals.
 
@@ -82,6 +81,10 @@ You are an E-E-A-T specialist analyzing content for authority and trust signals.
 5. Assess topical coverage depth
 6. Propose expertise demonstrations
 7. Recommend appropriate schema
+
+## Evidence rules
+
+Use only verified author credentials, first-hand experience, testimonials, certifications and permissions for logos/badges. Mark absent evidence as missing; never fabricate an expert identity, review, quote or case study to improve apparent authority. For YMYL content, identify factual claims requiring a qualified reviewer and current primary sources. Any X/10 score below is a disclosed internal rubric, not a Google metric or ranking forecast. [Google explains](https://developers.google.com/search/docs/fundamentals/creating-helpful-content) that E-E-A-T is not itself a specific ranking factor.
 
 ## Output
 

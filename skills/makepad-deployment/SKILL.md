@@ -8,8 +8,26 @@ description: |
   GitHub Actions, CI, action, marketplace
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/makepad-packaging-action.md`
+- `./assets/icon.png`
+- `./dist/resources/makepad_widgets`
+- `./dist/resources/makepad_fonts_chinese_bold`
+- `./dist/resources/makepad_fonts_chinese_bold_2`
+- `./dist/resources/makepad_fonts_chinese_regular`
+- `./dist/resources/makepad_fonts_chinese_regular_2`
+- `./dist/resources/makepad_fonts_emoji`
+- `./dist/resources/your_app_resource`
+- `./dist/resources/my-makepad-app`
+- `<support-root>/references/platform-troubleshooting.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Makepad Packaging & Deployment
 
@@ -244,8 +262,8 @@ First, create an empty app in Xcode with matching org/app names to generate prov
 cargo makepad apple ios \
     --org=com.yourcompany \
     --app=YourApp \
-    --profile=$YOUR_PROFILE_PATH \
-    --cert=$YOUR_CERT_FINGERPRINT \
+    --profile="$YOUR_PROFILE_PATH" \
+    --cert="$YOUR_CERT_FINGERPRINT" \
     --device=iPhone \
     run-device -p your-app --release
 ```
@@ -283,13 +301,13 @@ Output in `./target/makepad-wasm-app/release/your-app/`:
 **Serve locally:**
 ```bash
 cd ./target/makepad-wasm-app/release/your-app
-python3 -m http.server 8080
+python3 -m http.server 8080 --bind 127.0.0.1
 # Open http://localhost:8080
 ```
 
 ---
 
-## Complete Example Cargo.toml
+## Illustrative Cargo.toml (application sources/assets not bundled)
 
 ```toml
 [package]
@@ -421,3 +439,5 @@ cargo makepad android install-toolchain --full-ndk
 - Use this skill only when the task clearly matches the scope described above.
 - Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
 - Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+
+The install commands and dev-branch dependencies are historical examples; pin reviewed versions/immutable commits and matching lockfiles before execution. `--locked` alone does not pin a moving Git branch. Preserve existing tool installations rather than blindly using --force. Raw Payload zipping does not establish a valid distribution IPA: signing, provisioning, entitlements and supported export workflow must match the target channel. Package signing/notarization, device installation and release upload require authorized targets and secure signing credentials. Check the selected packager's actual key names, platform dependencies and output paths; these snippets have not been built. The additional community workflow reference is external/unbundled too.

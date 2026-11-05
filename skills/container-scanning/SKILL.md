@@ -3,7 +3,7 @@ name: container-scanning
 description: Scan container images for vulnerabilities using Trivy, Grype, and cloud-native
   tools.
 category: security
-risk: safe
+risk: critical
 source: https://github.com/BagelHole/DevOps-Security-Agent-Skills
 source_repo: BagelHole/DevOps-Security-Agent-Skills
 source_type: community
@@ -53,7 +53,7 @@ Use this skill when:
 
 ```bash
 # Linux
-curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh -o /tmp/install-trivy.sh && sh /tmp/install-trivy.sh && rm /tmp/install-trivy.sh -s -- -b /usr/local/bin
+# Tool prerequisite: use a verified preinstalled binary; no network installer runs here.
 
 # macOS
 brew install trivy
@@ -77,7 +77,7 @@ trivy image --format json -o results.json myapp:latest
 # Filter by severity
 trivy image --severity HIGH,CRITICAL myapp:latest
 
-# Ignore unfixed vulnerabilities
+# Optional filtered view; retain an unfiltered report of unfixed risk too.
 trivy image --ignore-unfixed myapp:latest
 
 # Exit code on vulnerability
@@ -121,7 +121,8 @@ scan:
 
 ### CI Integration
 
-```yaml
+```text
+NON-EXECUTABLE CI DESIGN: before adoption, use least-privilege jobs, pin every action to a reviewed full SHA, and provision verified fixed-version tools in a digest-pinned runner image. Never expose credentials during tool provisioning.
 # GitHub Actions
 name: Container Security
 
@@ -140,7 +141,7 @@ jobs:
         run: docker build -t myapp:${{ github.sha }} .
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
+        step: Run the preinstalled reviewed Trivy binary
         with:
           image-ref: 'myapp:${{ github.sha }}'
           format: 'sarif'
@@ -160,7 +161,7 @@ jobs:
 
 ```bash
 # Linux/macOS
-curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh -o /tmp/install-grype.sh && sh /tmp/install-grype.sh && rm /tmp/install-grype.sh -s -- -b /usr/local/bin
+# Tool prerequisite: use a verified preinstalled binary; no network installer runs here.
 
 # Homebrew
 brew install grype
@@ -220,7 +221,8 @@ docker scout recommendations myapp:latest
 
 ### CI Integration
 
-```yaml
+```text
+NON-EXECUTABLE CI DESIGN: before adoption, use least-privilege jobs, pin every action to a reviewed full SHA, and provision verified fixed-version tools in a digest-pinned runner image. Never expose credentials during tool provisioning.
 - name: Docker Scout
   uses: docker/scout-action@v1
   with:
@@ -259,10 +261,8 @@ az security pricing create \
   --name Containers \
   --tier Standard
 
-# View scan results in Azure Portal or:
-az acr repository show \
-  --name myregistry \
-  --image myapp:latest
+# Read Defender vulnerability findings through its supported findings API/portal.
+# az acr repository show returns image metadata, not a vulnerability report.
 ```
 
 ### Google Artifact Registry
@@ -278,6 +278,10 @@ gcloud artifacts docker images describe \
   us-central1-docker.pkg.dev/project/myrepo/myapp:latest \
   --show-package-vulnerability
 ```
+
+## Admission example boundaries
+
+The Gatekeeper/Kyverno snippets are incomplete/version-specific sketches, not enforceable proof of scan policy. Pin actual CRDs/Rego syntax, supply required Constraint/trusted attestor configuration, and test accept/reject cases before cluster admission. Repository prefix checks require a normalized boundary (for example an approved registry/path plus `/`), not an attacker-lookalike prefix; cover init and ephemeral containers. A `verifyImages` predicate needs a verified signer/issuer and actual predicate schema, not an invented `scanner` variable. The `scan-policy.yaml` below is conceptual, with no bundled consumer. Record image digest, scanner/DB versions, date, exclusions and residual unfixed findings; a clean scan is not certification.
 
 ## Admission Controllers
 

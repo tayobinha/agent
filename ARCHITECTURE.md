@@ -298,5 +298,5 @@ For details, see [scripts/README.md](scripts/README.md)
 
 Skills de design/UI mantidas em pasta separada e sincronizadas dos repositórios de origem.
 Índice para a IA: `curated/design-ui/INDEX.md`. Fontes: `curated/sources.json`; versões em uso: `curated/sources.lock.json`.
-Atualizar: `python scripts/sync_external.py` (ou `update-external-skills.ps1`). Também roda semanalmente via GitHub Actions (`sync-external-skills.yml`).
-Várias dessas skills também existem em `skills/` (versão da biblioteca Awesome); a cópia em `curated/` é a fonte oficial atualizada.
+Atualizar: `update-skills.ps1` (faz upstream + curated + push) ou `python scripts/sync_external.py`. Também roda semanalmente via GitHub Actions (`sync-external-skills.yml`).
+As cópias antigas em `skills/` foram removidas; scripts próprios (ux_audit, accessibility_checker, playwright_runner) estão em `scripts/design-checks/` e guias extras em `.shared/frontend-design/`.

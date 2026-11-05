@@ -5,6 +5,20 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/semver.md`
+- `<support-root>/references/compatibility-matrix.md`
+- `<support-root>/references/staged-upgrades.md`
+- `<support-root>/references/testing-strategy.md`
+- `<support-root>/assets/upgrade-checklist.md`
+- `<support-root>/assets/compatibility-matrix.csv`
+- `<support-root>/scripts/audit-dependencies.sh`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Dependency Upgrade
 
@@ -20,7 +34,6 @@ Master major dependency version upgrades, compatibility analysis, staged upgrade
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Use this skill when
 
@@ -45,6 +58,8 @@ PATCH: Bug fixes, backward compatible
 ~2.3.1 = >=2.3.1 <2.4.0 (patch updates)
 2.3.1 = exact version
 ```
+
+Separate inspection from mutation: npm audit fix/dedupe, yarn dedupe and ncu -u change dependency state. Pin and review codemods/CLI packages before running; the changelog-parser/react-codeshift command shapes below are illustrative and must be checked against the actual official tool, not assumed runnable. Regex migration is not syntax-aware and can corrupt strings/comments/imports; use reviewed AST transforms and inspect every diff. SemVer promises do not prove compatibility and caret rules differ below 1.0. Select exact targets from release notes/peer requirements instead of latest. --force/--legacy-peer-deps bypass protections rather than resolve incompatibility. A matching React version or DOM snapshot is not full runtime/visual verification. Do not overwrite an existing UPGRADE_PLAN.md or enable automerge implicitly.
 
 ## Dependency Analysis
 
@@ -278,7 +293,7 @@ describe('E2E Tests', () => {
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
+      "automerge": false
     },
     {
       "matchUpdateTypes": ["major"],
@@ -310,28 +325,12 @@ updates:
 
 ## Rollback Plan
 
-```javascript
-// rollback.sh
-#!/bin/bash
-
-# Save current state
-git stash
-git checkout -b upgrade-branch
-
-# Attempt upgrade
-npm install package@latest
-
-# Run tests
-if npm run test; then
-  echo "Upgrade successful"
-  git add package.json package-lock.json
-  git commit -m "chore: upgrade package"
-else
-  echo "Upgrade failed, rolling back"
-  git checkout main
-  git branch -D upgrade-branch
-  npm install  # Restore from package-lock.json
-fi
+```bash
+# Work on a topic branch with a clean or separately preserved starting state.
+# Record the original full commit SHA and lockfile before changing dependencies.
+# If validation fails, keep the failed diff and logs for diagnosis.
+# Review and revert only task-owned manifest/lockfile changes when appropriate,
+# then use npm ci to restore the recorded lockfile; never delete the branch or others' work.
 ```
 
 ## Common Upgrade Patterns

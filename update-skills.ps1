@@ -39,6 +39,10 @@ if (Test-Path $SourceSkills) {
     }
 }
 
+# 2b. Sync curated external design skills (curated/design-ui)
+Write-Host "Syncing curated external skills..." -ForegroundColor Cyan
+python (Join-Path $GlobalAgentPath "scripts\sync_external.py")
+
 # 3. Update Statistics
 Write-Host "Updating ARCHITECTURE.md stats..." -ForegroundColor Cyan
 $Count = (Get-ChildItem -Path $SkillsPath -Directory).Count
@@ -61,4 +65,13 @@ if (Test-Path $ArchFile) {
     Write-Host "Warning: ARCHITECTURE.md not found at $ArchFile" -ForegroundColor Red
 }
 
-Write-Host "Reminder: Don't forget to commit and push changes in your global .agent folder." -ForegroundColor Yellow
+# 4. Commit and push to GitHub
+Write-Host "Committing and pushing to GitHub..." -ForegroundColor Cyan
+git -C $GlobalAgentPath add -A
+git -C $GlobalAgentPath diff --cached --quiet
+if ($LASTEXITCODE -ne 0) {
+    git -C $GlobalAgentPath commit -m "chore(skills): sync upstream and curated skills"
+    git -C $GlobalAgentPath push
+} else {
+    Write-Host "No changes to commit." -ForegroundColor Yellow
+}

@@ -3,7 +3,7 @@ name: fp-backend
 description: Functional programming patterns for Node.js/Deno backend development using fp-ts, ReaderTaskEither, and functional dependency injection
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 version: 1.0.0
 author: kadu
 tags:
@@ -20,6 +20,10 @@ tags:
 # fp-ts Backend Patterns
 
 Functional programming patterns for building type-safe, testable backend services using fp-ts.
+
+## Version and execution scope
+
+Pin fp-ts, TypeScript, framework and Prisma versions; these excerpts omit application types/helpers and do not form a compiled package. fp-ts TaskEither represents only errors wrapped by its adapters; thrown exceptions/rejected promises still require handling. Deno needs explicit npm/runtime configuration and Node APIs are not automatically portable. Validate effects and error paths against real adapters before adopting the patterns.
 
 ## Detailed Guide
 

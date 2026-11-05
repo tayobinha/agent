@@ -31,6 +31,10 @@ Use this skill when:
 - Securing the software supply chain
 - Automating vulnerability detection
 
+## Scan and exception boundaries
+
+Inventory every relevant manifest/lockfile, including nested projects; a clean root scan does not cover them. Review tools at fixed versions and scan with lifecycle scripts disabled where supported. Some scanners upload dependency metadata or source, so confirm permitted data/account scope. `fix`, `--force`, ignores and suppressions mutate dependencies or policy: review diffs and test before adopting them. Historical suppression IDs/dates are examples, never reusable approval; bind each real exception to evidence, owner and expiry. A missing vulnerable-function call is not automatically a false positive or a license exemption.
+
 ## Prerequisites
 
 - Package manifest files (package.json, requirements.txt, etc.)
@@ -82,7 +86,8 @@ snyk ignore --id=SNYK-JS-LODASH-567746 --expiry=2024-12-31 --reason="No exploit 
 
 ### CI Integration
 
-```yaml
+```text
+NON-EXECUTABLE CI DESIGN: before adoption, use least-privilege jobs, pin every action to a reviewed full SHA, and provision verified fixed-version tools in a digest-pinned runner image. Never expose credentials during tool provisioning.
 # .github/workflows/snyk.yml
 name: Snyk Security
 
@@ -98,7 +103,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
+        step: Run the preinstalled reviewed Snyk binary
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -230,8 +235,8 @@ dependency-check --project "MyProject" \
 ### Suppression File
 
 ```xml
-<!-- suppression.xml -->
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- suppression.xml -->
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
   <suppress>
     <notes>False positive - not using vulnerable function</notes>
@@ -362,7 +367,7 @@ cyclonedx-gomod mod -json > sbom.json
 
 ```bash
 # Install
-curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh -o /tmp/install-syft.sh && sh /tmp/install-syft.sh && rm /tmp/install-syft.sh -s
+# Tool prerequisite: use a verified preinstalled binary; no network installer runs here.
 
 # Generate SBOM
 syft dir:/path/to/project -o cyclonedx-json > sbom.json
@@ -374,7 +379,8 @@ syft myimage:latest -o cyclonedx-json > sbom.json
 
 ## CI/CD Pipeline
 
-```yaml
+```text
+NON-EXECUTABLE CI DESIGN: before adoption, use least-privilege jobs, pin every action to a reviewed full SHA, and provision verified fixed-version tools in a digest-pinned runner image. Never expose credentials during tool provisioning.
 # Comprehensive dependency scanning
 name: Dependency Security
 
@@ -395,7 +401,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Snyk scan
-        uses: snyk/actions/node@master
+        step: Run the preinstalled reviewed Snyk binary
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:

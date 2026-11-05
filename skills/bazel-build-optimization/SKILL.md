@@ -20,7 +20,6 @@ Production patterns for Bazel in large-scale monorepos.
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Use this skill when
 
@@ -61,6 +60,10 @@ workspace/
 | **Label** | Target identifier `//path/to:target` |
 | **Rule** | Defines how to build a target |
 | **Aspect** | Cross-cutting build behavior |
+
+## Version and remote-execution boundaries
+
+Templates are historical fragments, not a runnable workspace: verify the pinned Bazel major, Bzlmod versus legacy WORKSPACE support, all rule repositories/toolchains and real archive checksums. The snippets omit rules_ts, rules_jest and pip setup; do not invent those dependencies or accept `sha256="..."`. Remote cache/execution and build-event backends can receive source, environment and artifacts; require approved endpoints, TLS, scoped credentials and separate write trust for untrusted PRs. A build itself executes repository rules/actions. Record cold/warm cache state and equivalent targets before claiming speedup; query output counts packages, not total action nodes.
 
 ## Templates
 

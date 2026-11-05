@@ -5,8 +5,19 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
+## Restored helper safety
+
+The integration fixture in `assets/conftest_template.py` connects to the configured Cosmos endpoint; `cleanup_test_docs` deletes records explicitly added to its tracking list. Use only an isolated disposable test container with test-only records, never production data. Copying the template does not connect to Cosmos.
 
 # Cosmos DB Service Implementation
+
+Review corrections (2026-10-23): these snippets are incomplete application starters. Initialize the synchronous client during startup outside the event loop, serialize initialization and close client/credential on shutdown. A cached failed initialization needs an explicit bounded recovery path. `azure.cosmos.aio` is also available; the SDK is not synchronous-only. Enforce tenant authorization independently of partition routing; the bundled client assumes `/workspaceId`. Never accept caller SQL fragments. Distinguish unavailable storage (503) from not-found (404) and empty data; the older graceful-default examples below illustrate a policy to avoid for authoritative reads. Use ETag conditional writes to prevent lost updates, enforce uniqueness atomically, and implement cross-partition moves with conflict-aware compensation; read-then-upsert/delete is not atomic. No live Cosmos behavior is verified by these templates.
+
+
 
 Build production-grade Azure Cosmos DB NoSQL services following clean code, security best practices, and TDD principles.
 
@@ -89,9 +100,13 @@ from starlette.concurrency import run_in_threadpool
 _cosmos_container = None
 
 def _is_emulator_endpoint(endpoint: str) -> bool:
-    return "localhost" in endpoint or "127.0.0.1" in endpoint
+    from urllib.parse import urlsplit
+    parsed = urlsplit(endpoint)
+    return (parsed.scheme == "https" and parsed.username is None
+            and parsed.password is None
+            and parsed.hostname in {"localhost", "127.0.0.1", "::1"})
 
-async def get_container():
+def get_container():
     global _cosmos_container
     if _cosmos_container is None:
         if _is_emulator_endpoint(settings.cosmos_endpoint):
@@ -223,7 +238,7 @@ async def test_get_project_by_id_returns_project(mock_cosmos_container):
 ### Security
 - Zero secrets in code (RBAC via DefaultAzureCredential)
 - Parameterized queries prevent injection
-- Partition key isolation enforces data boundaries
+- Partition routing does not authorize tenants; enforce membership/roles before accepting workspace IDs
 
 ### Maintainability
 - Five-tier model pattern enables schema evolution

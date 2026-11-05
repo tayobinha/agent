@@ -1,10 +1,21 @@
 ---
 name: hybrid-cloud-networking
 description: "Configure secure, high-performance connectivity between on-premises and cloud environments using VPN, Direct Connect, and ExpressRoute."
-risk: safe
+risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
+## Supporting material availability
+
+These paths remain unavailable in this catalog copy:
+
+- `<support-root>/references/vpn-setup.md`
+
+Do not invoke a step that requires one of these files. Obtain the original material and review its dependencies, license, and effects before use. Independent inline steps and the bundled helpers can proceed within the user’s authorized scope.
 
 # Hybrid Cloud Networking
 
@@ -20,7 +31,6 @@ Configure secure, high-performance connectivity between on-premises and cloud en
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Purpose
 
@@ -35,6 +45,8 @@ Establish secure, reliable network connectivity between on-premises data centers
 - Migrate to cloud gradually
 
 ## Connection Options
+
+Confirm the exact account/subscription/project, CIDRs, routing policy and maintenance window before provisioning or advertising routes. The throughput/SLA figures below are version/topology-dependent examples, not guarantees; verify current provider documentation and prerequisites. Private circuits are not inherently end-to-end encrypted: select supported MACsec/IPsec/TLS where required. Avoid advertising the example entire 10.0.0.0/8 unless explicitly intended; overlapping routes or broad propagation can leak traffic or break connectivity. Plan rollback and test MTU, asymmetric routing, DNS and failover. Dual tunnels to one device/facility are not independent physical redundancy.
 
 ### AWS Connectivity
 
@@ -214,7 +226,7 @@ resource "aws_vpn_connection" "secondary" {
 ```bash
 # AWS VPN
 aws ec2 describe-vpn-connections
-aws ec2 get-vpn-connection-telemetry
+# Inspect VgwTelemetry in describe-vpn-connections and CloudWatch VPN metrics
 
 # Azure VPN
 az network vpn-connection show

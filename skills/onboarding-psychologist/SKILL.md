@@ -1,6 +1,6 @@
 ---
 name: onboarding-psychologist
-description: "One sentence - what this skill does and when to invoke it"
+description: "Design first-use and onboarding experiences that bring an early win, cut setup friction, build ownership and form habits through stable cues. Use when onboarding loses users early, time-to-value is long, or the first session should build confidence, momentum and a lasting habit."
 risk: safe
 source: community
 date_added: "2026-04-04"
@@ -21,6 +21,8 @@ Before designing onboarding, establish:
 4. **Constraints** - time-to-value, platform, and ethical limits.
 
 If the user's first win is unclear, ask before proceeding.
+
+Treat the cited mechanisms as design hypotheses, not guarantees or clinical assessment. Verify the full study and population before attributing a causal effect; the abbreviated citations here do not establish that every proposed UI tactic was tested. Measure first-win completion, time-to-value and voluntary return with consent; do not infer a user's mental state or claim a habit/identity shift from a completed screen.
 
 ## PSYCHOLOGICAL FRAMEWORK: IDENTITY-TO-HABIT ONBOARDING
 

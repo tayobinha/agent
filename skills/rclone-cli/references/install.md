@@ -1,3 +1,7 @@
+# Installation boundary
+
+This reference is historical installation background. This skill does not install or update rclone. Use an existing reviewed binary; otherwise stop before execution and arrange a separately approved immutable, signature-verified installation. The bundled legacy installer is disabled. Do not run the historical recipes below as an agent setup workflow.
+
 ---
 title: "Install"
 description: "Rclone Installation"
@@ -31,13 +35,13 @@ signatures on the release.
 To install rclone on Linux/macOS/BSD systems, run:
 
 ```console
-sudo -v ; curl https://rclone.org/install.sh | sudo bash
+# No bootstrap execution: use a separately reviewed signed installation.
 ```
 
 For beta installation, run:
 
 ```console
-sudo -v ; curl https://rclone.org/install.sh | sudo bash -s beta
+# No bootstrap execution: use a separately reviewed signed installation.
 ```
 
 Note that this script checks the version of rclone installed first and
@@ -112,8 +116,7 @@ More information on [macports.org](https://ports.macports.org/port/rclone/).
 
 ### Precompiled binary, using curl {#macos-precompiled}
 
-To avoid problems with macOS gatekeeper enforcing the binary to be signed and
-notarized it is enough to download with `curl`.
+Using curl may avoid browser quarantine marking, but it does not establish binary trust or replace signing, notarization and release verification.
 
 Download the latest version of rclone.
 
@@ -159,11 +162,7 @@ gatekeeper quarantine attribute. Starting from Catalina, when attempting to run
 macOS cannot verify that this app is free from malware.
 ```
 
-The simplest fix is to run
-
-```console
-xattr -d com.apple.quarantine rclone
-```
+Do not remove quarantine merely to silence this warning. Independently verify the immutable release and its signature, then use the organization-approved installation process.
 
 ## Windows installation {#windows}
 
@@ -189,7 +188,7 @@ If you are planning to use the [rclone mount](/commands/rclone_mount/)
 feature then you will need to install the third party utility
 [WinFsp](https://winfsp.dev/) also.
 
-### Windows package manager (Winget) {#windows-chocolatey}
+### Windows package manager (Winget) {#windows-winget}
 
 [Winget](https://learn.microsoft.com/en-us/windows/package-manager/) comes
 pre-installed with the latest versions of Windows. If not, update the
@@ -263,7 +262,7 @@ package is here.
 The rclone developers maintain a [docker image for rclone](https://hub.docker.com/r/rclone/rclone).
 
 **Note:** We also now offer a paid version of rclone with
-enterprise-grade security and zero CVEs through our partner
+security-focused packaging (a historical vendor claim, not a verified zero-vulnerability guarantee) through our partner
 [SecureBuild](https://securebuild.com/blog/introducing-securebuild).
 If you are interested, check out their website and the [Rclone
 SecureBuild Image](https://securebuild.com/images/rclone).

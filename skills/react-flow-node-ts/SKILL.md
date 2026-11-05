@@ -5,6 +5,9 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # React Flow Node
 
@@ -58,6 +61,10 @@ export interface MyNodeData extends Record<string, unknown> {
 
 export type MyNode = Node<MyNodeData, 'my-node'>;
 ```
+
+## Template integration checks
+
+These templates require the project-specific `@/types`, `@/store`, utility aliases and CSS variables; this bundle does not supply the application/store. Replace placeholders, verify `NodeProps` against installed `@xyflow/react`, and confirm `updateNode` merges node data rather than discarding sibling fields. Give editable inputs accessible labels plus `nodrag`/`nowheel` behavior as appropriate, and test keyboard editing, resize and connection state. Editing-mode UI visibility is not a server authorization boundary.
 
 ## Integration Steps
 

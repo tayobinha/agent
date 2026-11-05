@@ -7,8 +7,18 @@ description: |
   Matrix 集成, 聊天客户端
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/matrix-client.md`
+- `<support-root>/references/timeline-handling.md`
+- `<support-root>/references/moly-api-integration.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Robius Matrix SDK Integration Skill
 
@@ -124,18 +134,18 @@ pub enum MatrixRequest {
 ```rust
 static REQUEST_SENDER: Mutex<Option<UnboundedSender<MatrixRequest>>> = Mutex::new(None);
 
-/// Submit request from UI thread to async runtime
-pub fn submit_async_request(req: MatrixRequest) {
-    if let Some(sender) = REQUEST_SENDER.lock().unwrap().as_ref() {
-        sender.send(req).expect("BUG: matrix worker task receiver died!");
-    }
+/// Submit request from UI thread to async runtime; surface errors without dropping the draft
+pub fn submit_async_request(req: MatrixRequest) -> Result<(), String> {
+    let guard = REQUEST_SENDER.lock().map_err(|_| "request lock poisoned")?;
+    let sender = guard.as_ref().ok_or("Matrix worker is not ready")?;
+    sender.send(req).map_err(|_| "Matrix worker has stopped".to_owned())
 }
 
 // Usage in UI
-submit_async_request(MatrixRequest::SendMessage {
+let send_result = submit_async_request(MatrixRequest::SendMessage {
     room_id: room_id.clone(),
     message: RoomMessageEventContent::text_plain(&text),
-    replied_to: self.reply_to.take(),
+    replied_to: self.reply_to.clone(), // clear draft/reply only after confirmed enqueue
 });
 ```
 
@@ -154,7 +164,7 @@ async fn matrix_worker_task(
                     let Some(room_info) = rooms.get(&room_id) else {
                         continue;  // Room not ready yet
                     };
-                    (room_info.timeline.clone(), room_info.update_sender.clone())
+                    (room_info.timeline.clone(), room_info.timeline_update_sender.clone())
                 };
 
                 // Spawn dedicated task for this operation
@@ -176,13 +186,13 @@ async fn matrix_worker_task(
                             sender.send(TimelineUpdate::PaginationIdle {
                                 fully_paginated,
                                 direction,
-                            }).unwrap();
+                            }).ok();
                         }
                         Err(error) => {
                             sender.send(TimelineUpdate::PaginationError {
                                 error,
                                 direction,
-                            }).unwrap();
+                            }).ok();
                         }
                     }
                     SignalToUI::set_ui_signal();
@@ -287,13 +297,13 @@ async fn spawn_timeline_subscriber(
             new_items: items,
             changed_indices: BTreeSet::new(),
             is_append: false,
-        }).unwrap();
+        }).ok();
         SignalToUI::set_ui_signal();
 
         // Listen for updates
         while let Some(diff) = stream.next().await {
             let update = process_timeline_diff(diff);
-            sender.send(update).unwrap();
+            if sender.send(update).is_err() { break; }
             SignalToUI::set_ui_signal();
         }
     })
@@ -366,6 +376,8 @@ pub fn enqueue_rooms_list_update(update: RoomsListUpdate) {
 
 ## Client Build Pattern
 
+Version-specific architectural fragments, not a standalone compiling crate: pin compatible Makepad/matrix-sdk versions and resolve all application types/imports. Native sliding sync requires compatible homeserver support. Protect database passphrases and session tokens in the OS credential store; never serialize the passphrase beside the database or include it in logs. Reuse the saved DB/key on restore; creating a new folder each launch loses local continuity. Verify server origin and account/device identity before login, joins, sends or media downloads.
+
 ```rust
 async fn build_client(
     homeserver_url: &str,
@@ -389,9 +401,8 @@ async fn build_client(
         .server_name_or_homeserver_url(homeserver_url)
         .sqlite_store(&db_path, Some(&passphrase))
         .sliding_sync_version_builder(VersionBuilder::DiscoverNative)
-        .with_decryption_settings(DecryptionSettings {
-            sender_device_trust_requirement: TrustRequirement::Untrusted,
-        })
+        // Configure sender-device trust through the project’s reviewed policy;
+        // do not silently accept untrusted-device messages as verified.
         .with_encryption_settings(EncryptionSettings {
             auto_enable_cross_signing: true,
             backup_download_strategy: BackupDownloadStrategy::OneShot,
@@ -409,10 +420,10 @@ async fn build_client(
 
 ## Best Practices
 
-1. **Always spawn tasks**: Don't block the worker task receiver loop
+1. **Bound task concurrency**: Do not block the receiver loop, but use tracked tasks and per-room serialization/cancellation rather than unlimited spawning
 2. **Use crossbeam channels for per-room updates**: More efficient than global queue
 3. **Always call SignalToUI::set_ui_signal()**: After enqueueing any update
-4. **Handle room not ready**: Skip requests for rooms not yet in `ALL_JOINED_ROOMS`
+4. **Handle room not ready**: Report a retryable result; do not silently discard a requested write
 5. **Cleanup on drop**: Abort background tasks when rooms are closed
 6. **Use Cx::post_action for results**: Posted actions are handled in App::handle_actions
 7. **Use SegQueue for high-frequency updates**: Lock-free for room list updates
@@ -433,3 +444,5 @@ async fn build_client(
 - Use this skill only when the task clearly matches the scope described above.
 - Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
 - Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+
+Remaining channel sends in illustrative workers must be handled as lifecycle events rather than panic paths: report failure or exit the task when the UI receiver closes. Track all spawned operations per session and cancel/join them on logout; aborting the timeline subscription alone does not cancel pending sends or joins. Bound media sizes and queue growth, and keep message content/keys out of diagnostics.

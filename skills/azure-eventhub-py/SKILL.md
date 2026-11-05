@@ -5,6 +5,13 @@ risk: critical
 source: community
 date_added: '2026-02-27'
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
+## Restored helper safety
+
+`scripts/setup_consumer.py` authenticates to the configured Event Hub. `send` publishes event data; `receive` prints event bodies and properties and can write or advance a Blob checkpoint. Confirm the exact namespace, hub, payload/count, starting position, data handling, and checkpoint destination before live use.
 
 # Azure Event Hubs SDK for Python
 
@@ -15,6 +22,8 @@ Big data streaming platform for high-throughput event ingestion.
 ```bash
 pip install azure-eventhub azure-identity
 # For checkpointing with blob storage
+pip install azure-eventhub-checkpointstoreblob
+# For the async examples instead:
 pip install azure-eventhub-checkpointstoreblob-aio
 ```
 
@@ -26,6 +35,8 @@ EVENT_HUB_NAME=my-eventhub
 STORAGE_ACCOUNT_URL=https://<account>.blob.core.windows.net
 CHECKPOINT_CONTAINER=checkpoints
 ```
+
+Use an approved tenant/subscription identity with least-privilege data-plane access and a separate test consumer group/checkpoint container. DefaultAzureCredential chooses from configured credentials; verify the actual principal before use. Starting positions apply when no stored checkpoint overrides them. Checkpoint only after durable application processing and use idempotent effects: replay and retention loss remain possible. Close credentials and clients; context-managing a client does not automatically close an externally supplied credential.
 
 ## Authentication
 
@@ -126,7 +137,7 @@ with consumer:
     )
 ```
 
-### With Blob Checkpoint Store (Production)
+### With Blob Checkpoint Store (Sketch)
 
 ```python
 from azure.eventhub import EventHubConsumerClient
@@ -159,6 +170,7 @@ with consumer:
 ## Async Client
 
 ```python
+from azure.eventhub import EventData
 from azure.eventhub.aio import EventHubProducerClient, EventHubConsumerClient
 from azure.identity.aio import DefaultAzureCredential
 import asyncio

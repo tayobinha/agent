@@ -9,6 +9,14 @@ date_added: 2026-07-01
 license: MIT
 license_source: https://github.com/addyosmani/agent-skills/blob/main/LICENSE
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/accessibility-checklist.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/addyosmani/agent-skills), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Frontend UI Engineering
 
@@ -23,6 +31,8 @@ Build production-quality user interfaces that are accessible, performant, and vi
 - Implementing responsive layouts
 - Adding interactivity or state management
 - Fixing visual or UX issues
+
+Snippets illustrate patterns and require project types, imports and callbacks; `toggleTask` and `deleteTask` in the container must be supplied by real authorized mutation hooks. Automated accessibility scans are partial evidence and must be paired with keyboard and assistive-technology checks. Honor reduced-motion settings and keep content visible when effects fail.
 
 ## Component Architecture
 
@@ -73,7 +83,7 @@ export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
     <li className="flex items-center gap-3 p-3">
       <Checkbox checked={task.done} onChange={() => onToggle(task.id)} />
       <span className={task.done ? 'line-through text-muted' : ''}>{task.title}</span>
-      <Button variant="ghost" size="sm" onClick={() => onDelete(task.id)}>
+      <Button aria-label={`Delete ${task.title}`} variant="ghost" size="sm" onClick={() => onDelete(task.id)}>
         <TrashIcon />
       </Button>
     </li>
@@ -86,20 +96,20 @@ export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
 ```tsx
 // Container: handles data
 export function TaskListContainer() {
-  const { tasks, isLoading, error } = useTasks();
+  const { tasks, isLoading, error, refetch } = useTasks();
 
   if (isLoading) return <TaskListSkeleton />;
   if (error) return <ErrorState message="Failed to load tasks" retry={refetch} />;
   if (tasks.length === 0) return <EmptyState message="No tasks yet" />;
 
-  return <TaskList tasks={tasks} />;
+  return <TaskList tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />;
 }
 
 // Presentation: handles rendering
-export function TaskList({ tasks }: { tasks: Task[] }) {
+export function TaskList({ tasks, onToggle, onDelete }: { tasks: Task[]; onToggle: (id: string) => void; onDelete: (id: string) => void }) {
   return (
     <ul role="list" className="divide-y">
-      {tasks.map(task => <TaskItem key={task.id} task={task} />)}
+      {tasks.map(task => <TaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} />)}
     </ul>
   );
 }
@@ -216,7 +226,9 @@ function Dialog({ isOpen, onClose }: DialogProps) {
     if (isOpen) closeRef.current?.focus();
   }, [isOpen]);
 
-  // Trap focus inside dialog when open
+  // This fragment only moves focus: open={isOpen} is non-modal and does not trap it.
+  // For a modal use showModal()/close(), Escape handling, an accessible name
+  // and focus restoration, or a tested dialog primitive.
   return (
     <dialog open={isOpen}>
       <button ref={closeRef} onClick={onClose}>Close</button>
@@ -230,7 +242,7 @@ function Dialog({ isOpen, onClose }: DialogProps) {
 
 ```tsx
 // Don't show blank screens
-function TaskList({ tasks }: { tasks: Task[] }) {
+function TaskList({ tasks, onCreateTask }: { tasks: Task[]; onCreateTask: () => void }) {
   if (tasks.length === 0) {
     return (
       <div role="status" className="text-center py-12">
@@ -287,7 +299,7 @@ function useToggleTask() {
       const previous = queryClient.getQueryData(['tasks']);
 
       queryClient.setQueryData(['tasks'], (old: Task[]) =>
-        old.map(t => t.id === taskId ? { ...t, done: !t.done } : t)
+        (old ?? []).map(t => t.id === taskId ? { ...t, done: !t.done } : t)
       );
 
       return { previous };
@@ -308,7 +320,7 @@ For detailed accessibility requirements and testing tools, see `references/acces
 | Rationalization | Reality |
 |---|---|
 | "Accessibility is a nice-to-have" | It's a legal requirement in many jurisdictions and an engineering quality standard. |
-| "We'll make it responsive later" | Retrofitting responsive design is 3x harder than building it from the start. |
+| "We'll make it responsive later" | Retrofitting responsive design can add work; no universal effort multiplier is established here. |
 | "The design isn't final, so I'll skip styling" | Use the design system defaults. Unstyled UI creates a broken first impression for reviewers. |
 | "This is just a prototype" | Prototypes become production code. Build the foundation right. |
 | "The AI aesthetic is fine for now" | It signals low quality. Use the project's actual design system from the start. |

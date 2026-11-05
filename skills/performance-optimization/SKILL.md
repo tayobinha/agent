@@ -9,6 +9,14 @@ date_added: 2026-07-01
 license: MIT
 license_source: https://github.com/addyosmani/agent-skills/blob/main/LICENSE
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/performance-checklist.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/addyosmani/agent-skills), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Performance Optimization
 
@@ -136,7 +144,7 @@ for (const task of tasks) {
   task.owner = await db.users.findUnique({ where: { id: task.ownerId } });
 }
 
-// GOOD: Single query with join/include
+// GOOD: Eager relation loading; inspect generated queries (include is not always a SQL join)
 const tasks = await db.tasks.findMany({
   include: { owner: true },
 });
@@ -281,7 +289,9 @@ async function getAppConfig(): Promise<AppConfig> {
   if (cachedConfig && Date.now() < cacheExpiry) {
     return cachedConfig;
   }
-  cachedConfig = await db.config.findFirst();
+  const config = await db.config.findFirst();
+  if (!config) throw new Error("Application configuration missing");
+  cachedConfig = config;
   cacheExpiry = Date.now() + CACHE_TTL;
   return cachedConfig;
 }
@@ -293,12 +303,13 @@ app.use('/static', express.static('public', {
 }));
 
 // Cache-Control for API responses
+// Only for explicitly public, non-personalized data; private responses need a separate policy.
 res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
 ```
 
 ## Performance Budget
 
-Set budgets and enforce them:
+Set representative, product-specific budgets; these are illustrative starting points:
 
 ```
 JavaScript bundle: < 200KB gzipped (initial load)
@@ -331,7 +342,7 @@ For detailed performance checklists, optimization commands, and anti-pattern ref
 | "We'll optimize later" | Performance debt compounds. Fix obvious anti-patterns now, defer micro-optimizations. |
 | "It's fast on my machine" | Your machine isn't the user's. Profile on representative hardware and networks. |
 | "This optimization is obvious" | If you didn't measure, you don't know. Profile first. |
-| "Users won't notice 100ms" | Research shows 100ms delays impact conversion rates. Users notice more than you think. |
+| "Users won't notice 100ms" | Measure whether latency affects this product's users; no universal conversion multiplier applies. |
 | "The framework handles performance" | Frameworks prevent some issues but can't fix N+1 queries or oversized bundles. |
 
 ## Red Flags
@@ -361,3 +372,5 @@ After any performance-related change:
 - Use this skill only when the task clearly matches its upstream source and local project context.
 - Verify commands, generated code, dependencies, credentials, and external service behavior before applying changes.
 - Do not treat examples as a substitute for environment-specific tests, security review, or user approval for destructive or costly actions.
+
+Assess Core Web Vitals field distributions at the 75th percentile, segmented by device where appropriate. RUM collection requires privacy/data-retention scope. Shared caches must be keyed by tenant/authorization context or restricted to genuinely global configuration; never cache private API data publicly. Validate page inputs and use stable unique ordering/cursor pagination for mutable datasets. TTI is a historical metric, not a current Core Web Vital.

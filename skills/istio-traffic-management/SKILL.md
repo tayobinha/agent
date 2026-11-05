@@ -20,7 +20,6 @@ Comprehensive guide to Istio traffic management for production service mesh depl
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Use this skill when
 
@@ -343,3 +342,5 @@ istioctl proxy-config log deploy/my-app --level debug
 - Use this skill only when the task clearly matches the scope described above.
 - Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
 - Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+
+Before applying templates, verify the installed CRDs/API version, namespace, subset labels and gateway secret scope, then run the available schema/analyze checks and stage a bounded canary with rollback. Fault injection and debug logging need the authorized environment and duration. Mirroring duplicates requests: isolate writes and notifications in the mirror destination, redact sensitive data, and start below 100%. Retry only operations whose semantics tolerate replay.

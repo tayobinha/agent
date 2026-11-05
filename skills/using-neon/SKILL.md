@@ -5,6 +5,27 @@ risk: safe
 source: "https://github.com/neondatabase/agent-skills/tree/main/skills/neon-postgres"
 date_added: "2026-02-27"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/what-is-neon.md`
+- `<support-root>/references/referencing-docs.md`
+- `<support-root>/references/features.md`
+- `<support-root>/references/getting-started.md`
+- `<support-root>/references/connection-methods.md`
+- `<support-root>/references/devtools.md`
+- `<support-root>/references/neon-serverless.md`
+- `<support-root>/references/neon-drizzle.md`
+- `<support-root>/references/neon-auth.md`
+- `<support-root>/references/neon-js.md`
+- `<support-root>/references/neon-platform-api.md`
+- `<support-root>/references/neon-cli.md`
+- `<support-root>/references/neon-typescript-sdk.md`
+- `<support-root>/references/neon-python-sdk.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/neondatabase/agent-skills/tree/main/skills/neon-postgres), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Neon Serverless Postgres
 
@@ -35,7 +56,7 @@ You can use the `curl` commands to fetch the documentation page as markdown:
 curl https://neon.com/llms.txt
 
 # Fetch any doc page as markdown
-curl -H "Accept: text/markdown" https://neon.com/docs/<path>
+curl -H "Accept: text/markdown" "https://neon.com/docs/REPLACE_WITH_DISCOVERED_PATH"
 ```
 
 Don't guess docs pages. Use the `llms.txt` index to find the relevant URL or follow the links in the resources below.

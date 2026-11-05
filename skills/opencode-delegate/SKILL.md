@@ -16,6 +16,10 @@ compatibility: Requires the `opencode` CLI installed and authenticated, Node 18+
 metadata:
   version: 0.5.0
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
 # OpenCode Delegate
 
 ## When to Use
@@ -149,7 +153,7 @@ OpenCode's autonomy is governed by the **agent**, not a sandbox enum:
 
 - **`build`** (the relay default) — write-capable; edits files in the working dir headlessly. The
   equivalent of "let it implement."
-- **`plan`** (via `--read-only`) — read-only; reviews and diagnoses without touching the tree. The
+- **`plan`** (via `--read-only`) — requests the CLI plan agent. Actual tool permissions depend on installed configuration; this flag is not a host sandbox. The
   equivalent of "let it look but not edit."
 
 Permissions **auto-approve by default**: the relay passes `--auto` so a headless run never blocks on a
@@ -158,7 +162,7 @@ and the implementer sweep (step 4) are the safety net, not a per-action prompt. 
 honor the agent's own permission config instead (allow/ask/deny per action); pair it with an agent whose
 in-workspace permissions are set to *allow*, or a headless run can hang waiting on an `ask`.
 **Read-only (`plan`) runs never get `--auto`** — auto-approving would let the plan agent's ask-gated
-edit/bash permissions through and defeat "read-only," so a review can't be tricked into touching the tree.
+edit/bash permissions through and defeat "read-only," so this reduces automatic permission approval; verify installed plan permissions and use OS isolation when writes must be impossible.
 
 ## Authorization model
 
@@ -183,7 +187,7 @@ is in [references/review-and-land.md](references/review-and-land.md).
 
 ## Limitations
 
-- Docs-only import — executable `scripts/relay.mjs` not included; see upstream for full runtime. Requires `opencode` CLI, Node 18+, git.
+- Runtime helper `scripts/relay.mjs` is bundled from the revision recorded in `UPSTREAM-NOTICE.md`. Requires the corresponding installed and authenticated CLI, Node 18+, and git.
 - Relay never commits — it only returns structured result JSON; you review and land the commit.
 
-> Adapted from [amElnagdy/delegate-skills](https://github.com/amElnagdy/delegate-skills) (MIT) — docs-only, runtime not bundled.
+> Adapted from [amElnagdy/delegate-skills](https://github.com/amElnagdy/delegate-skills) (MIT) — runtime helper and references bundled.

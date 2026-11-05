@@ -21,7 +21,6 @@ date_added: '2026-02-27'
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 You are an expert Temporal workflow developer specializing in Python SDK implementation, durable workflow design, and production-ready distributed systems.
 
@@ -150,7 +149,7 @@ Expert Temporal developer focused on building reliable, scalable workflow orches
 
 - Automatic workflow state preservation
 - Event history replay mechanism
-- Workflow versioning with `workflow.get_version()`
+- Workflow versioning with Python `workflow.patched()` and `workflow.deprecate_patch()` plus supported Worker Versioning
 - Safe code evolution strategies
 - Backward compatibility patterns
 
@@ -366,6 +365,10 @@ Expert Temporal developer focused on building reliable, scalable workflow orches
 3. Idempotency is critical for activities
 4. Test with time-skipping for fast feedback
 5. Monitor and observe in production
+
+## Concrete durable workflow procedure
+
+For an order flow, put charge/reserve calls in activities with stable operation-specific idempotency keys, bounded schedule-to-close/start-to-close timeouts and a defined compensation policy. Persist only minimal references in workflow history; payloads/errors and replay histories may contain sensitive data, so configure encryption/access controls where needed. A saga is not an ACID transaction across services, compensation can fail, and activity retries do not provide exactly-once external effects. Keep orchestration deterministic and replay representative histories before deploying incompatible changes using the [Python patching procedure](https://docs.temporal.io/develop/python/workflows/versioning). Unit/time-skipping tests do not prove real activity integrations. Verify payload limits and process-pool/shared-state requirements for the installed SDK/server; the 2MB and coverage figures here are examples, not universal acceptance gates.
 
 ## Example
 

@@ -9,6 +9,13 @@ date_added: 2026-07-01
 license: MIT
 license_source: https://github.com/zxkane/aws-skills/blob/main/LICENSE
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
+## Restored helper safety
+
+`scripts/validate-stack.sh` runs `cdk synth` from the caller-selected project root, which executes that project's CDK application and dependencies, can write `cdk.out`, and may contact AWS context providers if the project requires lookups. Review the project and AWS context before invoking it. The helper does not deploy; deployment needs separate user authorization.
 
 # AWS CDK Development
 
@@ -16,7 +23,7 @@ This skill provides comprehensive guidance for developing AWS infrastructure usi
 
 ## AWS Documentation Requirement
 
-Always verify AWS facts using MCP tools (`mcp__aws-mcp__*` or `mcp__*awsdocs*__*`) before answering. The `aws-mcp-setup` dependency is auto-loaded — if MCP tools are unavailable, guide the user through that skill's setup flow.
+Always verify AWS facts using MCP tools (`mcp__aws-mcp__*` or `mcp__*awsdocs*__*`) before answering. Check actual tool availability; no dependency is auto-loaded by this catalog. If MCP is unavailable, use current official AWS documentation, or report the missing capability without automatically installing a server.
 
 ## CDK-Specific MCP Guidance
 
@@ -74,7 +81,7 @@ new lambda.Function(this, 'MyFunction', {
 
 Use the appropriate Lambda construct based on runtime:
 
-**TypeScript/JavaScript**: Use `@aws-cdk/aws-lambda-nodejs`
+**TypeScript/JavaScript**: Use `aws-cdk-lib/aws-lambda-nodejs` (CDK v2)
 ```typescript
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
@@ -85,7 +92,7 @@ new NodejsFunction(this, 'MyFunction', {
 });
 ```
 
-**Python**: Use `@aws-cdk/aws-lambda-python`
+**Python**: Use the version-matched `@aws-cdk/aws-lambda-python-alpha` package
 ```typescript
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 
@@ -163,7 +170,7 @@ Aspects.of(app).add(new AwsSolutionsChecks());
 
 3. **Validation Script**: Meta-level checks
    ```bash
-   ./scripts/validate-stack.sh
+   bash "<skill-dir>/scripts/validate-stack.sh"
    ```
 
 The validation script now focuses on:
@@ -187,7 +194,7 @@ The validation script now focuses on:
 4. **Validate**: Run pre-deployment checks (see above)
 5. **Synthesize**: Generate CloudFormation templates
 6. **Review**: Examine synthesized templates for correctness
-7. **Deploy**: Deploy to target environment
+7. **Deploy**: Review diff/replacements, target account/region, costs and authorization before deployment
 8. **Verify**: Confirm resources are created correctly
 
 ### Stack Organization

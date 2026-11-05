@@ -5,6 +5,17 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/assets/prometheus.yml.template`
+- `<support-root>/references/scrape-configs.md`
+- `<support-root>/references/recording-rules.md`
+- `<support-root>/scripts/validate-prometheus.sh`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Prometheus Configuration
 
@@ -20,7 +31,6 @@ Complete guide to Prometheus setup, metric collection, scrape configuration, and
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Purpose
 
@@ -52,6 +62,8 @@ Configure Prometheus for comprehensive metric collection, alerting, and monitori
        └─→ Long-term storage (Thanos/Cortex)
 ```
 
+Pin and inspect chart/image versions and values before installing. The Helm PVC fragment also needs a suitable StorageClass and capacity; verify rendered manifests. The Compose example lacks Alertmanager, exporters, Kubernetes API credentials/RBAC, TLS files and rule mounts referenced by the full configuration: provide those explicitly or remove unused jobs. Keep monitoring APIs private and protect labels/config responses from exposing tenant data or secrets. Bound metric label cardinality and validate rules with promtool; thresholds are illustrative, not universal SLOs. An absent error series may require a deliberate zero-fill strategy and zero traffic should not become an assumed healthy percentage.
+
 ## Installation
 
 ### Kubernetes with Helm
@@ -64,7 +76,8 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
   --create-namespace \
   --set prometheus.prometheusSpec.retention=30d \
-  --set prometheus.prometheusSpec.storageVolumeSize=50Gi
+  --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]=ReadWriteOnce \
+  --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=50Gi
 ```
 
 ### Docker Compose
@@ -75,7 +88,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -137,7 +150,7 @@ scrape_configs:
     relabel_configs:
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
         action: keep
-        regex: true
+        regex: "true"
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
         action: replace
         target_label: __metrics_path__
@@ -219,7 +232,7 @@ scrape_configs:
     relabel_configs:
       - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
         action: keep
-        regex: true
+        regex: "true"
       - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
         action: replace
         target_label: __scheme__

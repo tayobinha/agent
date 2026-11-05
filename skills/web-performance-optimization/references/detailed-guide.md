@@ -13,7 +13,7 @@ Help developers optimize website and web application performance to improve user
 
 I'll help you establish baseline metrics:
 - Run Lighthouse audits
-- Measure Core Web Vitals (LCP, FID, CLS)
+- Measure Core Web Vitals (LCP, INP, CLS)
 - Check bundle sizes
 - Analyze network waterfall
 - Identify performance bottlenecks
@@ -55,6 +55,10 @@ Measure impact of changes:
 - Monitor real user metrics (RUM)
 - Test on different devices and networks
 
+
+Separate repeatable lab tests from real-user field metrics; record test conditions and use the 75th percentile field LCP/INP/CLS for Core Web Vitals assessment. Lab Lighthouse scores alone do not certify field INP. Numeric image/bundle budgets below are project examples, not universal thresholds.
+
+Caching must distinguish immutable public assets from personalized/API responses; never publicly cache secrets or authenticated user data. Test service-worker update/rollback and cache invalidation. Third-party analytics require privacy/consent review; defer is not consent.
 
 ## Best Practices
 
@@ -98,7 +102,7 @@ lighthouse https://yoursite.com --throttling.cpuSlowdownMultiplier=4
 ```
 
 ### Problem: Large JavaScript Bundle
-**Symptoms:** Long Time to Interactive (TTI), high FID
+**Symptoms:** Long main-thread tasks, high INP, high Total Blocking Time (TBT) in Lighthouse
 **Solution:**
 - Analyze bundle with webpack-bundle-analyzer
 - Remove unused dependencies
@@ -116,10 +120,16 @@ npx webpack-bundle-analyzer dist/stats.json
 - Use aspect-ratio CSS property
 - Reserve space with skeleton loaders
 ```css
+/* Keep each image's own ratio; the width/height attributes reserve the space */
 img {
-  aspect-ratio: 16 / 9;
-  width: 100%;
+  max-width: 100%;
   height: auto;
+}
+
+/* Force a ratio only where a fixed frame is intended */
+.hero img {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
 }
 ```
 
@@ -136,7 +146,7 @@ export async function getStaticProps() {
   const data = await fetchData();
   return {
     props: { data },
-    revalidate: 60 // Regenerate every 60 seconds
+    revalidate: 60 // Pages Router: eligible for revalidation after 60s; not a timer guarantee
   };
 }
 ```
@@ -176,10 +186,9 @@ export async function getStaticProps() {
 
 ### Core Web Vitals
 - [ ] LCP < 2.5s
-- [ ] FID < 100ms
+- [ ] INP ≤ 200ms
 - [ ] CLS < 0.1
 - [ ] TTFB < 600ms
-- [ ] TTI < 3.8s
 
 
 ## Performance Tools
@@ -223,4 +232,4 @@ export async function getStaticProps() {
 
 ---
 
-**Pro Tip:** Focus on Core Web Vitals (LCP, FID, CLS) first - they have the biggest impact on user experience and SEO rankings!
+Prioritize observed user bottlenecks; Core Web Vitals are useful signals, not a ranking or conversion guarantee.

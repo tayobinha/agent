@@ -4,17 +4,26 @@ description: "Lightweight Google Drive integration with standalone OAuth authent
 license: Apache-2.0
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-02-05"
 metadata:
   author: sanjay3290
   version: "1.0"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/scripts/auth.py`
+- `<support-root>/scripts/drive.py`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Google Drive
 
 Lightweight Google Drive integration with standalone OAuth authentication. No MCP server required. Full read/write access.
 
-> **Requires Google Workspace account.** Personal Gmail accounts are not supported.
+> Account support and OAuth scopes depend on the missing upstream scripts; verify the actual OAuth application before login. This entry does not establish a general restriction on personal Google accounts.
 
 ## When to Use
 - You need to search, list, upload, download, move, or organize Google Drive files and folders.
@@ -70,6 +79,8 @@ python scripts/drive.py list 1ABC123xyz --limit 20
 # Download a file
 python scripts/drive.py download 1ABC123xyz ./downloads/report.pdf
 ```
+
+Resolve scripts relative to the reviewed `<support-root>`, not an unrelated repository `scripts/` folder. Before writes, confirm exact file/folder IDs, destination and permissions; moving/trashing content may affect collaborators. A read request does not authorize changes, sharing or broader OAuth scopes.
 
 ## Write Commands
 
@@ -131,14 +142,14 @@ Google Drive uses long IDs like `1ABC123xyz_-abc123`. Get IDs from:
 
 ## Token Management
 
-Tokens stored securely using the system keyring:
+Upstream describes token storage using the system keyring; verify actual implementation and fallback behavior before relying on it:
 - **macOS**: Keychain
 - **Windows**: Windows Credential Locker
 - **Linux**: Secret Service API (GNOME Keyring, KDE Wallet, etc.)
 
 Service name: `google-drive-skill-oauth`
 
-Automatically refreshes expired tokens using Google's cloud function.
+The upstream integration describes a cloud-function refresh flow. Verify its operator, destination, scopes and token handling from the actual scripts before transmitting tokens; do not assume Google operates an endpoint because it is hosted on its infrastructure.
 
 ## Limitations
 - Use this skill only when the task clearly matches the scope described above.

@@ -1,13 +1,17 @@
 ---
 name: matplotlib
 description: "Matplotlib is Python's foundational visualization library for creating static, animated, and interactive plots."
-license: https://github.com/matplotlib/matplotlib/tree/main/LICENSE
+license: MIT
+license_source: https://github.com/K-Dense-AI/scientific-agent-skills/blob/0936740e52033a6256085be5fc81e5e56d606110/LICENSE.md
 metadata:
     skill-author: K-Dense Inc.
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # Matplotlib
 
@@ -161,7 +165,7 @@ ax.clabel(contour, inline=True, fontsize=8)
 
 **Box plots** - Statistical distributions
 ```python
-ax.boxplot([data1, data2, data3], labels=['A', 'B', 'C'])
+ax.boxplot([data1, data2, data3], tick_labels=['A', 'B', 'C'])
 ```
 
 **Violin plots** - Distribution densities
@@ -312,6 +316,8 @@ plt.savefig('analysis.png', dpi=300, bbox_inches='tight')
 
 This skill includes helper scripts in the `scripts/` directory:
 
+The helper templates require NumPy and Matplotlib; the histogram/all mode additionally imports SciPy. Current examples use Matplotlib 3.10+ (`tick_labels` and `orientation`). The skill content is MIT-licensed under K-Dense attribution; the Matplotlib library has its separate [license](https://github.com/matplotlib/matplotlib/tree/main/LICENSE).
+
 ### `plot_template.py`
 Template script demonstrating various plot types with best practices. Use this as a starting point for creating new visualizations.
 
@@ -327,6 +333,8 @@ Interactive utility to configure matplotlib style preferences and generate custo
 ```bash
 python scripts/style_configurator.py
 ```
+
+When saving a style, choose a new output path. The helper refuses to overwrite an existing style or preview image; with `--preview --output`, the preview is saved beside the style as `<name>_preview.png`.
 
 ## Detailed References
 

@@ -16,6 +16,14 @@ allowed-tools:
   - Bash
   - WebFetch
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `seo/references/eeat-framework.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/AgriciDaniel/claude-seo), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Content Quality & E-E-A-T Analysis
 
@@ -56,16 +64,7 @@ Read `seo/references/eeat-framework.md` for full criteria.
 ## Content Metrics
 
 ### Word Count Analysis
-Compare against page type minimums:
-| Page Type | Minimum |
-|-----------|---------|
-| Homepage | 500 |
-| Service page | 800 |
-| Blog post | 1,500 |
-| Product page | 300+ (400+ for complex products) |
-| Location page | 500-600 |
-
-> **Important:** These are **topical coverage floors**, not targets. Google has confirmed word count is NOT a direct ranking factor. The goal is comprehensive topical coverage; a 500-word page that thoroughly answers the query will outrank a 2,000-word page that doesn't. Use these as guidelines for adequate coverage depth, not rigid requirements.
+Assess whether the page fully answers its intended user need. There is no universal minimum word count per page type; do not pad useful short pages to meet a quota. See [Google people-first content guidance](https://developers.google.com/search/docs/fundamentals/creating-helpful-content).
 
 ### Readability
 - Flesch Reading Ease: target 60-70 for general audience
@@ -77,7 +76,7 @@ Compare against page type minimums:
 
 ### Keyword Optimization
 - Primary keyword in title, H1, first 100 words
-- Natural density (1-3%)
+- Natural terminology, without numeric keyword-density targets
 - Semantic variations present
 - No keyword stuffing
 
@@ -94,7 +93,7 @@ Compare against page type minimums:
 - Charts/graphs for statistics
 
 ### Internal Linking
-- 3-5 relevant internal links per 1000 words
+- Relevant internal links where they help the reader; no fixed per-word quota
 - Descriptive anchor text
 - Links to related content
 - No orphan pages
@@ -106,7 +105,7 @@ Compare against page type minimums:
 
 ## AI Content Assessment (Sept 2025 QRG addition)
 
-Google's raters now formally assess whether content appears AI-generated.
+Assess factual accuracy, originality, usefulness and trust regardless of generation method; do not infer authorship from style alone.
 
 ### Acceptable AI Content
 - Demonstrates genuine E-E-A-T
@@ -136,7 +135,7 @@ Optimize for AI search engines (ChatGPT, Perplexity, Google AI Overviews):
 
 ### AI Search Visibility & GEO (2025-2026)
 
-**Google AI Mode** launched publicly in May 2025 as a separate tab in Google Search, available in 180+ countries. Unlike AI Overviews (which appear above organic results), AI Mode provides a fully conversational search experience with **zero organic blue links**, making AI citation the only visibility mechanism.
+AI search interfaces and availability change. Inspect the actual platform/region/query results; do not claim citations are the only possible visibility mechanism or promise selection from formatting.
 
 **Key optimization strategies for AI citation:**
 - **Structured answers:** Clear question-answer formats, definition patterns, and step-by-step instructions that AI systems can extract and cite
@@ -158,6 +157,8 @@ GEO is the emerging discipline of optimizing content specifically for AI-generat
 ## Output
 
 ### Content Quality Score: XX/100
+
+Optional qualitative rubric: disclose weights, evidence coverage and unavailable inputs. E-E-A-T observations and citation-readiness scores are not official search-engine metrics. Do not invent author credentials/testimonials or update dates without real changes.
 
 ### E-E-A-T Breakdown
 | Factor | Score | Key Signals |

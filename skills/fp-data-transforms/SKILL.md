@@ -3,7 +3,7 @@ name: fp-data-transforms
 description: Everyday data transformations using functional patterns - arrays, objects, grouping, aggregation, and null-safe access
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 version: 1.0.0
 author: Claude
 tags:
@@ -49,7 +49,7 @@ interface ApiOrder {
     product_id: string;
     product_name: string;
     qty: number;
-    unit_price: number;
+    unit_price: number; // integer cents, validated at the API boundary
   }>;
   order_date: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered';
@@ -155,6 +155,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
 };
 
+// Input must be validated and omit undefined fields before spread merging.
 const deepMergeSettings = (
   defaults: AppSettings,
   user: DeepPartial<AppSettings>

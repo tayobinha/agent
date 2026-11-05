@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Modified by AAS: see UPSTREAM-NOTICE.md for scope and validation limits.
 from __future__ import annotations
 
 import json
@@ -102,7 +103,7 @@ def main() -> int:
             notices,
         ).decode("utf-8")
         assert 'data-fcx-run-notice="1"' in notice_html
-        assert "受影响且无法核验的主张按“疑似误导”呈现" in notice_html
+        assert "受影响且无法核验的主张保持“证据不足”，不得从技术失败推定误导" in notice_html
 
         merge_results = Path(temp) / "merge-results"
         merge_results.mkdir()
@@ -176,7 +177,7 @@ def main() -> int:
         capture_stage = run(command("prepare-comparison", "--results", str(results), "--run-dir", str(run_dir)))
         assert capture_stage["stage"] == "capture_completed"
         assert capture_stage["analysisExecution"]["mode"] == "single_pass"
-        assert capture_stage["analysisExecution"]["maxToolCallsAfterStageAcknowledgement"] == 3
+        assert capture_stage["analysisExecution"]["suggestedToolCallsAfterStageAcknowledgement"] == 3
         assert len(capture_stage["analysisExecution"]["instructions"]) == 3
         assert capture_stage["artifacts"]["answerReferenceReport"] == str((run_dir / "capture" / "report.html").resolve())
         assert capture_stage["deliverables"][0]["path"] == str((run_dir / "01-capture-report.html").resolve())

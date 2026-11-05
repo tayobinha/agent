@@ -3,7 +3,7 @@ name: code-simplifier
 description: Simplifies and refines code for clarity, consistency, and maintainability while preserving all functionality. Use when asked to "simplify code", "clean up code", "refactor for clarity", "improve readability", or review recently modified code for elegance. Focuses on project-specific best practices.
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
 
 <!--
@@ -28,7 +28,7 @@ Never change what the code does - only how it does it. All original features, ou
 
 ### 2. Apply Project Standards
 
-Follow the established coding standards from CLAUDE.md including:
+Read the actual repository instructions (including applicable CLAUDE.md) first. The following are upstream style preferences, not universal requirements; apply them only when consistent with this project:
 
 - Use ES modules with proper import sorting and extensions
 - Prefer `function` keyword over arrow functions

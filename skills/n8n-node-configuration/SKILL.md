@@ -3,7 +3,7 @@ name: n8n-node-configuration
 description: Operation-aware node configuration guidance. Use when configuring nodes, understanding property dependencies, determining required fields, choosing between get_node detail levels, or learning common configuration patterns by node type.
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-01-30"
 ---
 
 # n8n Node Configuration
@@ -20,6 +20,10 @@ Read [the detailed guide](references/detailed-guide.md) before executing this sk
 - You are troubleshooting node setup rather than overall workflow architecture.
 
 ---
+
+## Configuration safety
+
+Read and preserve the existing workflow, credentials references and node versions before targeted updates. Configure in a draft/test workflow with synthetic inputs; publishing or activating may trigger scheduled runs and external messages/writes. Confirm intended recipients and approval before those effects. Do not paste credentials into JSON or execution logs. HTTP targets must be scoped and validated rather than taken directly from untrusted items.
 
 ## Limitations
 - Use this skill only when the task clearly matches the scope described above.

@@ -18,7 +18,7 @@ Read [the detailed guide](references/detailed-guide.md) before executing this sk
 
 ## When to Use
 
-Use this skill when you need when the user wants to create step-by-step technical tutorials, quickstarts, or code walkthroughs. Trigger phrases include "tutorial," "quickstart," "getting started guide," "walkthrough," "step by step," "how to guide," "hands-on guide," or "code tutorial.".
+Use this skill when you need to create step-by-step technical tutorials, quickstarts, or code walkthroughs. Trigger phrases include "tutorial," "quickstart," "getting started guide," "walkthrough," "step by step," "how to guide," "hands-on guide," or "code tutorial.".
 
 
 This skill helps you create step-by-step tutorials that actually work. Covers prerequisite handling, progressive complexity, troubleshooting sections, and creating those satisfying "it works!" moments.
@@ -38,7 +38,7 @@ Before starting, make sure you have:
 
 | Requirement | Version | Check Command |
 |-------------|---------|---------------|
-| Node.js | 18+ | `node --version` |
+| Node.js | supported project LTS, verified for this tutorial | `node --version` |
 | npm | 9+ | `npm --version` |
 | Git | Any | `git --version` |
 

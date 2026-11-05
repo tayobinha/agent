@@ -7,8 +7,17 @@ description: |
   makepad DSL 语法, makepad 继承, makepad 原型, 如何定义 makepad 组件
 risk: safe
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `./references/dsl-syntax.md`
+- `./references/inheritance.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Makepad DSL Skill
 
@@ -37,7 +46,7 @@ Refer to the local files for detailed documentation:
 
 1. Read the relevant reference file(s) listed above
 2. If file read fails or file is empty:
-   - Inform user: "本地文档不完整，建议运行 `/sync-crate-skills makepad --force` 更新文档"
+   - Report missing references; the sync command is not bundled and --force is not an authorized automatic fallback.
    - Still answer based on SKILL.md patterns + built-in knowledge
 3. If reference file exists, incorporate its content into the answer
 
@@ -158,7 +167,7 @@ Child = <Parent> {
 
 1. Explain inheritance as "eager copy" - properties are copied at definition time
 2. Emphasize that DSL is embedded in Rust via `live_design!` macro
-3. Highlight that changes to DSL are live-reloaded without recompilation
+3. Check the pinned revision and development tooling before promising live reload; Rust type/code changes may require recompilation
 4. Distinguish between named objects (prototypes) and widget instances
 
 ## Limitations

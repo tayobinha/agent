@@ -3,8 +3,16 @@ name: security-bluebook-builder
 description: "Build a minimal but real security policy for sensitive apps. The output is a single, coherent Blue Book document using MUST/SHOULD/CAN language, with explicit assumptions, scope, and security gates."
 risk: safe
 source: community
-date_added: "2026-09-04"
+date_added: "2026-01-30"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/bluebook_template.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Security Bluebook Builder
 
@@ -30,7 +38,7 @@ Collect just enough context to fill the template. If the user has not provided d
 If the user cannot answer, proceed with safe defaults and mark TODOs.
 
 ### 2) Draft the Blue Book
-Load `references/bluebook_template.md` and fill it with the provided details. Keep it concise, deterministic, and enforceable.
+If the original supporting installation is available, load `<support-root>/references/bluebook_template.md` and fill it with the provided details. Otherwise draft an independent policy using the Quality checks below and disclose that the upstream template was unavailable. Keep it concise and distinguish proposed controls from controls actually implemented or verified.
 
 ### 3) Enforce guardrails
 - Do not include secrets, tokens, or internal credentials.
@@ -51,7 +59,7 @@ Confirm the Blue Book includes:
 - Security gates + go/no-go checklist
 
 ## Resources
-- `references/bluebook_template.md`
+- `<support-root>/references/bluebook_template.md`
 
 ## Example
 

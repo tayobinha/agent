@@ -5,6 +5,20 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/hybrid-mode.md`
+- `<support-root>/references/component-migration.md`
+- `<support-root>/references/dependency-injection.md`
+- `<support-root>/references/routing.md`
+- `<support-root>/assets/hybrid-bootstrap.ts`
+- `<support-root>/assets/migration-timeline.md`
+- `<support-root>/scripts/analyze-angular-app.sh`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Angular Migration
 
@@ -58,6 +72,8 @@ Master AngularJS to Angular migration, including hybrid apps, component conversi
 - Gradually replace
 - **Best for:** Medium apps, distinct features
 
+These are partial migration examples, not a complete bootstrap: align AngularJS module names (`myAngularJSApp` versus `myApp`), register/declaratively import components and forms, configure HttpClient, and select compatible Angular/TypeScript/Node versions. The DI decorator fragments require a real NgModule class and imports. AngularJS `$http` resolves a response wrapper while HttpClient resolves its body; preserve this semantic difference. Test routing ownership and change detection before switching traffic.
+
 ## Hybrid App Setup
 
 ```typescript
@@ -105,8 +121,8 @@ angular.module('myApp').controller('UserController', function($scope, UserServic
   $scope.user = {};
 
   $scope.loadUser = function(id) {
-    UserService.getUser(id).then(function(user) {
-      $scope.user = user;
+    UserService.getUser(id).then(function(response) {
+      $scope.user = response.data;
     });
   };
 
@@ -146,7 +162,10 @@ export class UserComponent implements OnInit {
   }
 
   saveUser() {
-    this.userService.saveUser(this.user);
+    this.userService.saveUser(this.user).subscribe({
+      next: saved => { this.user = saved; },
+      error: error => { /* Display an appropriate UI error; do not log user data. */ }
+    });
   }
 }
 ```

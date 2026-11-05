@@ -7,8 +7,17 @@ description: |
   makepad 入门, 创建 makepad 应用, makepad 教程, makepad 项目结构
 risk: critical
 source: "https://github.com/makepad/makepad"
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `./references/app-structure.md`
+- `./references/event-handling.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/makepad/makepad), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Makepad Basics Skill
 
@@ -37,7 +46,7 @@ Refer to the local files for detailed documentation:
 
 1. Read the relevant reference file(s) listed above
 2. If file read fails or file is empty:
-   - Inform user: "本地文档不完整，建议运行 `/sync-crate-skills makepad --force` 更新文档"
+   - Report missing reference files; no sync-crate-skills command is bundled and --force is not an automatic fallback.
    - Still answer based on SKILL.md patterns + built-in knowledge
 3. If reference file exists, incorporate its content into the answer
 
@@ -96,8 +105,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-makepad-widgets = { git = "https://github.com/makepad/makepad", branch = "dev" }
+makepad-widgets = { git = "https://github.com/makepad/makepad", rev = "<reviewed-full-commit>" }
 ```
+
+Examples target a historical dev API and require a verified Rust/toolchain/platform setup; replace the commit placeholder before use. Button/label/input examples require matching named widgets in live_design and the pinned revision's event API. Platform package lists and web tooling are illustrative, not a current install guarantee.
 
 ### 3. Handling Button Clicks
 
@@ -154,7 +165,7 @@ let text = input.text();
 
 ## When Answering Questions
 
-1. Emphasize live design - changes in DSL reflect instantly without recompilation
+1. Explain supported live-design reload for the pinned tooling; do not promise every DSL/Rust change reloads without compilation
 2. Makepad is GPU-first - all rendering is shader-based
 3. Cross-platform: same code runs on Android, iOS, Linux, macOS, Windows, Web
 4. Recommend UI Zoo example for widget exploration

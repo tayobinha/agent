@@ -6,8 +6,11 @@ metadata:
     skill-author: K-Dense Inc.
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # Cirq - Quantum Computing with Python
 
@@ -17,6 +20,15 @@ Cirq is Google Quantum AI's open-source framework for designing, simulating, and
 - You are designing, simulating, or executing quantum circuits with the Cirq ecosystem.
 - You need Google Quantum AI-style primitives, parameterized circuits, or integrations like `cirq-google` and `cirq-ionq`.
 - You are prototyping or teaching quantum workflows in Python and want concrete circuit examples.
+
+## Execution boundaries
+
+Local examples are illustrative and were not runtime-tested. Pin Cirq/provider
+versions and check their official APIs before use. Hardware/cloud submissions
+need explicit account, target, data and budget authorization, including remote
+simulators. Processor names and access are account-specific. Support files retain
+MIT notices; the root's Apache metadata is inherited and not independent evidence
+of upstream relicensing.
 
 ## Installation
 
@@ -223,8 +235,9 @@ result = variational_algorithm(my_ansatz, my_cost, [0.0, 0.0])
 ### Hardware Execution Template
 
 ```python
-def run_on_hardware(circuit, provider='google', device_name='weber', repetitions=1000):
-    """Template for running on quantum hardware."""
+def run_on_hardware_sketch(circuit, provider='google', device_name='weber', repetitions=1000):
+    """Historical sketch, intentionally disabled pending provider/budget setup."""
+    raise NotImplementedError("Configure and validate the approved provider SDK first")
 
     if provider == 'google':
         import cirq_google

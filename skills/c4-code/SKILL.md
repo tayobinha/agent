@@ -23,7 +23,6 @@ date_added: '2026-02-27'
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Overview
 
@@ -91,7 +90,6 @@ classDiagram
     Class1 ..|> Interface1 : implements
     Class1 --> Class2 : uses
 ```
-````
 
 ### Functional/Procedural Code (Modules, Functions)
 
@@ -202,8 +200,6 @@ flowchart TB
 ## Notes
 
 [Any additional context or important information]
-
-```
 
 ## Example Interactions
 

@@ -26,7 +26,7 @@ Keep the Mac awake using the built-in `caffeinate` command. No install needed.
 ## Quick start — the standard command
 
 ```bash
-caffeinate -d -i -t 7200    # full power: screen stays on + no idle sleep, for 2 hours
+caffeinate -i -t 7200       # prevent idle system sleep for 2 hours
 ```
 
 Duration is `-t <seconds>`: 2h = 7200, 7h = 25200, overnight (9h) = 32400.
@@ -37,11 +37,11 @@ Duration is `-t <seconds>`: 2h = 7200, 7h = 25200, overnight (9h) = 32400.
 |---|---|
 | `-i` | prevents idle **system** sleep only (screen may still dim/lock) |
 | `-d` | prevents **display** sleep (screen stays on) |
-| `-d -i` | **default choice** — screen on + system awake |
-| `-d -i -s` | adds `-s`: prevents sleep even on AC power semantics; `-s` only works when plugged in |
+| `-d -i` | screen on + system awake, when the task needs a visible display |
+| `-d -i -s` | adds `-s`: prevents system sleep while on AC power; valid only when plugged in |
 | `-u -t 1` | simulates user activity — wakes the display right now |
 
-Default to `-d -i -t <seconds>` unless the user says otherwise.
+Default to `-i -t <seconds>`; add `-d` only when the task needs the display awake. These assertions do not guarantee continued execution through lid closure, shutdown or loss of power, and do not replace the lock-screen policy.
 
 ## Tie to a process instead of a timer
 
@@ -65,7 +65,7 @@ Otherwise run it as a background Bash task. Never block your own foreground shel
 ```bash
 pgrep -fl caffeinate                       # is it running? shows exact flags
 ps -o etime= -p <PID>                      # how long it's been running
-pmset -g assertions | grep -i deny        # confirm sleep assertions are active
+pmset -g assertions    # inspect PreventUserIdleSystemSleep / PreventUserIdleDisplaySleep        # confirm sleep assertions are active
 ```
 
 **Gotcha:** `caffeinate` prints nothing and holds the prompt — it looks "stuck" or like Enter wasn't pressed. It isn't stuck. Verify with `pgrep`, not by looking at the terminal.
@@ -79,8 +79,10 @@ pmset -g assertions | grep -i deny        # confirm sleep assertions are active
 ## Stop early
 
 ```bash
-pkill -f "caffeinate -d -i"    # or Ctrl+C in the pane running it
+kill <recorded-caffeinate-PID>    # or Ctrl+C in the pane running this task
 ```
+
+Record the PID of the process started for this task; verify its command before stopping it. Do not stop unrelated caffeinate sessions by a broad pattern.
 
 After starting: confirm to the user the PID, the flags, and the wall-clock time it will expire.
 

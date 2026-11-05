@@ -5,6 +5,15 @@ risk: none
 source: community
 date_added: '2026-02-27'
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/compensation-benchmarks.md`
+- `<support-root>/references/equity-calculator.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Team Composition Analysis
 
@@ -25,13 +34,14 @@ Design optimal team structures, hiring plans, compensation strategies, and equit
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Overview
 
 Build the right team at the right time with appropriate compensation and equity. Plan role-by-role hiring aligned with revenue milestones, budget constraints, and market benchmarks.
 
 ## Team Structure by Stage
+
+All staffing, salary, equity, geographic and hiring-time numbers below are illustrative planning assumptions, not verified current benchmarks or rules for funding stages. Replace them with dated market evidence for the target jurisdiction and role. Separate employer cash cost from employee total compensation and speculative equity value. Model scenarios/runway and seek qualified local review for employment, tax and equity agreements; this document does not establish compliance.
 
 ### Pre-Seed (0-$500K ARR)
 
@@ -380,9 +390,9 @@ Total Comp Budget = Σ (Role Count × Fully-Loaded Cost × % of Year)
 
 Example:
 3 Engineers × $202K × 100% = $606K
-2 AEs × $230K × 75% (mid-year start) = $345K
+2 AEs × $230K × 50% (mid-year start) = $230K
 1 PM × $162K × 100% = $162K
-Total: $1.1M
+Total: $998K
 ```
 
 ## Additional Resources

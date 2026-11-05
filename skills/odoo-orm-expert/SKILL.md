@@ -3,7 +3,7 @@ name: odoo-orm-expert
 description: "Master Odoo ORM patterns: search, browse, create, write, domain filters, computed fields, and performance-safe query techniques."
 risk: safe
 source: "self"
-date_added: "2026-09-04"
+date_added: "2026-03-04"
 ---
 
 # Odoo ORM Expert
@@ -30,19 +30,23 @@ This skill teaches you Odoo's Object Relational Mapper (ORM) in depth. It covers
 ### Example 1: Search with Domain Filters
 
 ```python
-# Find all confirmed sale orders for a specific customer, created this year
+# Find up to 50 confirmed sale orders for a specific customer dated this UTC year
 import datetime
 
-start_of_year = datetime.date.today().replace(month=1, day=1).strftime('%Y-%m-%d')
+year = datetime.datetime.now(datetime.timezone.utc).year
+start_of_year = datetime.datetime(year, 1, 1)  # Odoo stores naive UTC datetimes
+start_of_next_year = datetime.datetime(year + 1, 1, 1)
 
 orders = self.env['sale.order'].search([
     ('partner_id', '=', partner_id),
     ('state', '=', 'sale'),
     ('date_order', '>=', start_of_year),
+    ('date_order', '<', start_of_next_year),
 ], order='date_order desc', limit=50)
 
-# Note: pass dates as 'YYYY-MM-DD' strings in domains,
-# NOT as fields.Date objects — the ORM serializes them correctly.
+# date_order is a Datetime field. For precise business-year boundaries,
+# construct UTC datetime bounds from the intended business timezone;
+# this example uses the UTC calendar year.
 ```
 
 ### Example 2: Computed Field
@@ -63,8 +67,8 @@ def _compute_total_order_count(self):
 ### Example 3: Safe Bulk Write (avoid N+1)
 
 ```python
-# ✅ GOOD: One query for all records
-partners = self.env['res.partner'].search([('country_id', '=', False)])
+# Batch writes reduce repeated calls, but can trigger additional compute/tracking queries
+partners = self.env['res.partner'].browse(approved_partner_ids).exists()  # Explicit scoped IDs
 partners.write({'country_id': self.env.ref('base.us').id})
 
 # ❌ BAD: Triggers a separate query per record
@@ -80,7 +84,7 @@ for partner in partners:
 - ✅ **Do:** Use `with_context(...)` to pass context values cleanly rather than modifying `self.env.context` directly.
 - ❌ **Don't:** Call `search()` inside a loop — this is the #1 Odoo performance killer.
 - ❌ **Don't:** Use raw SQL unless absolutely necessary; use ORM for all standard operations.
-- ❌ **Don't:** Pass Python `datetime`/`date` objects directly into domain tuples — always stringify them as `'YYYY-MM-DD'`.
+- ✅ **Do:** Match values to the field type: Date uses dates or server date strings; Datetime uses datetimes or server datetime strings. Python date/datetime objects are supported; do not truncate a datetime to a date or mix the two types when comparing. See the [Odoo ORM date/time guidance](https://www.odoo.com/documentation/17.0/developer/reference/backend/orm.html).
 
 ## Limitations
 
@@ -88,3 +92,5 @@ for partner in partners:
 - **Stored computed fields** can cause significant write overhead at scale; this skill does not cover partitioning strategies.
 - Does not cover **transient models** (`models.TransientModel`) or wizard patterns.
 - ORM behavior can differ slightly between Odoo SaaS and On-Premise due to config overrides.
+
+Examples are model-method fragments requiring imports, record definitions and authorized scope. Do not infer missing country data means US; write only confirmed values to selected records. `sudo()` bypasses access rules and requires a justified boundary. Batch operations do not guarantee one SQL query, and mapped/filtered may load large recordsets; profile actual query counts and test record-rule/multi-company isolation.

@@ -3,7 +3,7 @@ name: threejs-interaction
 description: Three.js interaction - raycasting, controls, mouse/touch input, object selection. Use when handling user input, implementing click detection, adding camera controls, or creating interactive 3D experiences.
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
 
 # Three.js Interaction
@@ -16,6 +16,12 @@ Read [the detailed guide](references/detailed-guide.md) before executing this sk
 - You need user interaction inside a Three.js scene.
 - The task involves raycasting, object picking, pointer handling, touch input, or camera controls.
 - You are building an interactive 3D experience rather than a passive render.
+
+## Example
+
+```text
+Add pointer selection to this canvas using its bounding rectangle, test after resize/scroll and provide keyboard selection. Dispose listeners/controls on unmount and verify picking nested meshes.
+```
 
 ## Limitations
 - Use this skill only when the task clearly matches the scope described above.

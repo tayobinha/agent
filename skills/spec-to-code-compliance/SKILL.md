@@ -3,7 +3,7 @@ name: spec-to-code-compliance
 description: Verifies code implements exactly what documentation specifies for blockchain audits. Use when comparing code against whitepapers, finding gaps between specs and implementation, or performing compliance checks for protocol implementations.
 risk: safe
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
 
 ## When to Use
@@ -19,6 +19,10 @@ Use this skill when you need to:
 - Questions like "does this code match the spec?" or "what's missing from the implementation?"
 - Audit engagements requiring spec-to-code alignment analysis
 - Protocol implementations being verified against whitepapers
+
+## Evidence boundaries
+
+The referenced IR_EXAMPLES.md, OUTPUT_REQUIREMENTS.md, COMPLETENESS_CHECKLIST.md and named agent are not bundled. Inline phases can guide analysis, but do not claim their absent standards were followed. Freeze the exact code commit, specification versions and review inventory. Preserve originals/page locators when normalizing; do not discard legal/attribution watermarks. Record excluded or unread files, dependencies, assembly/generated code and unresolved semantics. Confidence numbers are subjective evidence labels, not calibrated probabilities. A spec mismatch is not automatically critical or exploitable; establish reachable impact and prerequisites. Undocumented behavior can still be tested, and passing alignment does not prove security, legal compliance or full correctness. Conflicting spec sources need explicit precedence rather than silent inference.
 
 ## When NOT to Use
 
@@ -146,7 +150,7 @@ Extract:
 - variable definitions & expected relationships
 - all preconditions / postconditions
 - explicit invariants
-- implicit invariants deduced from context
+- candidate implicit invariants, explicitly labeled as hypotheses rather than spec requirements
 - math formulas (in canonical symbolic form)
 - expected flows & state-machine transitions
 - economic assumptions

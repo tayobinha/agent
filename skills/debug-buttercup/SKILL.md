@@ -3,8 +3,16 @@ name: debug-buttercup
 description: "All pods run in namespace crs. Use when pods in the crs namespace are in CrashLoopBackOff, OOMKilled, or restarting, multiple services restart simultaneously (cascade failure), or redis is unresponsive or showing AOF warnings."
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/failure-patterns.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Debug Buttercup
 
@@ -36,6 +44,8 @@ All pods run in namespace `crs`. Key services:
 | Fuzzing | build-bot, fuzzer-bot, coverage-bot, tracer-bot, merger-bot |
 | Analysis | patcher, seed-gen, program-model, pov-reproducer |
 | Interface | competition-api, ui |
+
+Confirm the cluster context and installed Buttercup version; crs, labels, queue names and health paths below are deployment assumptions. diagnosis.sh and deployment/collect-logs.sh are not bundled here; do not invent or run substitute helpers. Read-only diagnostics may still expose credentials/records or add load. Select the correct container and redact logs/CLIENT LIST/OTEL variables before sharing; avoid dumping all environment values. Namespace scoping does not constrain node-level commands. Use XPENDING for delivered-unacknowledged group messages and XINFO GROUPS for lag; XLEN counts retained entries. Do not restart or change Redis durability settings as part of diagnosis without a separate scoped recovery plan.
 
 ## Triage Workflow
 
@@ -167,7 +177,7 @@ Buttercup uses Redis streams with consumer groups. Queue names:
 | Delete Task | orchestrator_delete_task_queue |
 
 ```bash
-# Check stream length (pending messages)
+# Check retained stream length (not consumer-group pending count)
 kubectl exec -n crs <redis-pod> -- redis-cli XLEN fuzzer_build_queue
 
 # Check consumer group lag

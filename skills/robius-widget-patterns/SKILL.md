@@ -7,8 +7,18 @@ description: |
   pageflip, 组件设计, 组件模式
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/widget-patterns.md`
+- `<support-root>/references/styling-patterns.md`
+- `<support-root>/references/moly-widget-patterns.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Robius Widget Patterns Skill
 
@@ -28,7 +38,7 @@ Use this skill when:
 
 ## Production Patterns
 
-For production-ready widget patterns, see the `_base/` directory:
+The upstream `_base/` directory is not bundled. These pattern names are navigation suggestions, not production-certified code:
 
 | Pattern | Description |
 |---------|-------------|
@@ -341,8 +351,7 @@ pub enum LoadingState {
 
 impl LoadableContent {
     pub fn set_state(&mut self, cx: &mut Cx, state: LoadingState) {
-        self.state = state;
-        match &self.state {
+        match &state {
             LoadingState::Idle | LoadingState::Loaded => {
                 self.view(ids!(content)).set_visible(cx, true);
                 self.view(ids!(loading_overlay)).set_visible(cx, false);
@@ -360,6 +369,7 @@ impl LoadableContent {
                 self.label(ids!(error_view.error_label)).set_text(cx, msg);
             }
         }
+        self.state = state;
         self.redraw(cx);
     }
 }
@@ -431,3 +441,5 @@ impl Widget for ItemsList {
 - Use this skill only when the task clearly matches the scope described above.
 - Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
 - Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+
+Examples are incomplete historical Makepad fragments: supply missing types/helpers, defaults, event routing and registration and compile against a pinned framework revision. LoadingState needs an explicit default for #[rust] initialization where required. A wrapper returning Ok when no widget was borrowed means no operation occurred; do not interpret it as successful image loading. Visible overlays do not inherently block input; test keyboard focus, modal interaction, image errors and recycled virtual-item state.

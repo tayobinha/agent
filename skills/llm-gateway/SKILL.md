@@ -27,7 +27,7 @@ Use this skill when:
 - Running multiple LLM backends (OpenAI, Anthropic, vLLM, Ollama) behind a single endpoint
 - Enforcing per-team or per-user rate limits and spend budgets
 - Implementing automatic fallback when a provider is down
-- Adding semantic caching to reduce API costs by 20–50%
+- Adding semantic caching to reduce repeated-request costs when workload measurements support it
 - Centralizing API key management instead of distributing keys to every app
 
 ## Prerequisites
@@ -39,19 +39,18 @@ Use this skill when:
 
 ## LiteLLM Proxy — Quick Start
 
-LiteLLM is the de facto open-source LLM gateway with OpenAI-compatible API.
+LiteLLM is an open-source LLM gateway with OpenAI-compatible API.
 
 ```bash
 # Run with Docker
 docker run -d \
   --name litellm-proxy \
-  -p 4000:4000 \
+  -p 127.0.0.1:4000:4000 \
   -e OPENAI_API_KEY=$OPENAI_API_KEY \
   -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
   -v $(pwd)/litellm-config.yaml:/app/config.yaml \
   ghcr.io/berriai/litellm:main-latest \
-  --config /app/config.yaml \
-  --detailed_debug
+  --config /app/config.yaml
 ```
 
 ## LiteLLM Configuration
@@ -90,11 +89,6 @@ model_list:
       api_base: http://vllm-2:8000/v1  # second replica — auto load balanced
       api_key: fake
 
-  # Fallback: cheap model if primary fails
-  - model_name: gpt-4o
-    litellm_params:
-      model: openai/gpt-4o-mini        # fallback to cheaper model
-      api_key: os.environ/OPENAI_API_KEY
 
 router_settings:
   routing_strategy: least-busy         # or: latency-based, simple-shuffle
@@ -105,8 +99,7 @@ router_settings:
 
   # Fallback configuration
   fallbacks:
-    - gpt-4o: [claude-sonnet-4-6]
-    - claude-sonnet-4-6: [gpt-4o]
+    - gpt-4o: [gpt-4o-mini]
 
 litellm_settings:
   # Semantic caching
@@ -115,7 +108,6 @@ litellm_settings:
     type: redis
     host: redis
     port: 6379
-    similarity_threshold: 0.90        # cache if >90% semantic similarity
 
   # Logging
   success_callback: ["langfuse"]
@@ -139,7 +131,7 @@ services:
     volumes:
       - ./litellm-config.yaml:/app/config.yaml
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
@@ -189,16 +181,63 @@ curl -X POST http://localhost:4000/key/generate \
     "team_id": "team-backend",
     "key_alias": "backend-team-key",
     "models": ["gpt-4o-mini", "llama-3.1-8b"],
-    "max_budget": 100,              # USD limit
+    "max_budget": 100,
     "budget_duration": "monthly",
-    "rpm_limit": 100,               # requests per minute
-    "tpm_limit": 500000             # tokens per minute
+    "rpm_limit": 100,
+    "tpm_limit": 500000
   }'
 
 # View spend
 curl http://localhost:4000/spend/keys \
   -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
+
+## Bifrost (Alternative Open-Source Gateway)
+
+[Bifrost](https://github.com/maximhq/bifrost) is an open-source (Apache-2.0) LLM gateway written in Go that you run yourself. Like LiteLLM, it puts an OpenAI-compatible API in front of multiple providers and handles fallbacks, load balancing, virtual keys with budgets and rate limits, and an optional semantic cache. Providers and their API keys are configured in its web UI or in `config.json`.
+
+```bash
+# Run with Docker (web UI and API on port 8080, state persisted in ./bifrost-data)
+docker run -d \
+  --name bifrost \
+  -p 127.0.0.1:8080:8080 \
+  -v $(pwd)/bifrost-data:/app/data \
+  maximhq/bifrost:v2.3.0               # pin a release tag
+```
+
+Existing OpenAI SDK code only needs a new base URL and a Bifrost virtual key:
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8080/openai",
+    api_key=os.environ["BIFROST_VIRTUAL_KEY"],  # sk-bf-...
+)
+response = client.chat.completions.create(
+    model="openai/gpt-4o-mini",                 # provider/model
+    messages=[{"role": "user", "content": "Hello"}],
+)
+```
+
+Create a virtual key with a monthly budget and request/token rate limits:
+
+```bash
+curl -X POST http://localhost:8080/api/governance/virtual-keys \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "backend-team-key",
+    "provider_configs": [{"provider": "openai", "allowed_models": ["gpt-4o-mini"], "key_ids": ["*"]}],
+    "budgets": [{"max_limit": 100, "reset_duration": "1M"}],
+    "rate_limit": {
+      "request_max_limit": 100, "request_reset_duration": "1m",
+      "token_max_limit": 500000, "token_reset_duration": "1m"
+    }
+  }'
+```
+
+Requests without a virtual key are still accepted unless "Enforce Virtual Keys on Inference" (`enforce_auth_on_inference`) is turned on. A fresh instance has no dashboard password, so enable authentication before exposing it beyond localhost. See the [Bifrost docs](https://docs.getbifrost.ai) for fallbacks, semantic caching and Kubernetes (Helm) deployment.
 
 ## Nginx Load Balancer (Alternative/Complement)
 
@@ -212,12 +251,14 @@ upstream vllm_backends {
     keepalive 32;
 }
 
+# Place this directive in the surrounding http context:
+limit_req_zone $http_authorization zone=per_key:10m rate=100r/m;
+
 server {
     listen 80;
     server_name llm-api.internal;
 
-    # Rate limiting
-    limit_req_zone $http_authorization zone=per_key:10m rate=100r/m;
+    # Rate limiting zone is declared at http context above.
     limit_req zone=per_key burst=20 nodelay;
 
     location /v1/ {
@@ -263,9 +304,9 @@ curl http://localhost:4000/key/list \
 ## Best Practices
 
 - Use virtual keys per team/app — never expose raw provider API keys.
-- Enable `cache: true` with Redis for repeated or similar queries; can cut costs 30–50%.
+- Measure cache correctness and hit rate on the workload; no fixed savings percentage is guaranteed.
 - Set `num_retries: 3` with fallbacks to handle provider outages gracefully.
-- Log all requests to Langfuse or OpenTelemetry for cost attribution and debugging.
+- Log allowlisted operational metadata; private prompt/response tracing requires explicit data-transfer and retention scope.
 - Use `least-busy` routing strategy for self-hosted models to avoid GPU saturation.
 
 ## Related Skills
@@ -280,3 +321,4 @@ curl http://localhost:4000/key/list \
 - Infrastructure commands can disrupt services: confirm target host/scope and have backups/snapshots before mutating state.
 - Docs-only import: upstream scripts and templates not bundled.
 
+This stack is illustrative, not production-secured: pin reviewed image digests, require a strong configured gateway master key and authenticated TLS ingress, replace sample database credentials, and protect database/Redis networks. A duplicate `model_name` entry load-balances deployments; it does not guarantee ordered fallback. Configure acyclic fallback policy explicitly and disclose provider/model substitution. Ordinary Redis caching is not automatically semantic vector caching; verify the chosen backend/schema. Partition cache keys by tenant, authorization, model/config and content version; do not cache sensitive or action-bearing responses across users. Header-based Nginx rate keys do not validate authentication or stop clients changing arbitrary headers. Quota errors require budget review, not automatic limit increases.

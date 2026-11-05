@@ -2,7 +2,7 @@
 name: recsys-pipeline-architect
 description: "Designs composable recommendation, ranking, and feed pipelines using the six-stage Source→Hydrator→Filter→Scorer→Selector→SideEffect framework"
 category: data-ai
-risk: safe
+risk: critical
 source: community
 source_repo: mturac/recsys-pipeline-architect
 source_type: community
@@ -13,6 +13,14 @@ tools: [claude, codex, cursor, gemini, opencode, cline, continue, windsurf]
 license: "MIT"
 license_source: "https://github.com/mturac/recsys-pipeline-architect/blob/main/LICENSE"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/interfaces.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/mturac/recsys-pipeline-architect), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # recsys-pipeline-architect
 
@@ -76,7 +84,7 @@ Skill identifies this as an offline-batch pipeline. Generates a scheduled job sc
 
 - ✅ Surface the multi-action vs single-score trade-off explicitly — don't default silently
 - ✅ Order filters by cost (cheap before expensive); universal filters before user-specific
-- ✅ Wrap side effects in fire-and-forget patterns (goroutines / promises without await / asyncio tasks) — never block the response
+- ✅ For durable side effects, await a bounded durable-queue/outbox write or the effect itself; untracked fire-and-forget tasks can be lost
 - ✅ Keep scoring deterministic and cacheable; do diversity reranking as a separate stage
 - ✅ Attribute the pattern as "popularized by xAI's open-sourced For You algorithm" when generating output
 - ❌ Don't invent benchmark or latency numbers — say "depends on workload, run it yourself"
@@ -94,7 +102,7 @@ Skill identifies this as an offline-batch pipeline. Generates a scheduled job sc
 
 - The generated scaffolds are framework code, not application logic — no shell commands, no network fetches, no credential handling
 - Filters in the generated cookbook include eligibility/paywall/geo-restriction checks; the skill recommends putting these *before* scoring (so blocked content is never scored)
-- Side-effect stages are always async / fire-and-forget; the skill documents this explicitly in the generated README to prevent users from accidentally blocking the response with cache writes or event emissions
+- Side-effect stages need explicit durability, error handling and idempotency; only declared best-effort telemetry may be dropped; the skill documents this explicitly in the generated README to prevent users from accidentally blocking the response with cache writes or event emissions
 
 ## Common Pitfalls
 
@@ -105,7 +113,7 @@ Skill identifies this as an offline-batch pipeline. Generates a scheduled job sc
   **Solution:** Skill defaults to candidate isolation via attention masking; recommends joint only when there's a specific reason (e.g., batch-aware diversity)
 
 - **Problem:** Side effects (cache writes, impression emits) block the response
-  **Solution:** Skill generates fire-and-forget patterns and documents the constraint
+  **Solution:** Use a bounded queue/outbox and worker, with retry/dead-letter policy and observable outcomes
 
 ## Upstream
 
@@ -115,3 +123,5 @@ This skill is a thin adapter to the upstream repository. For the full SKILL.md c
 - **Release:** v0.1.0
 - **Install via skills.sh:** `npx skills add mturac/recsys-pipeline-architect`
 - **Pattern source:** https://github.com/xai-org/x-algorithm (Apache 2.0; this skill is MIT)
+
+Upstream scaffold/test-pass descriptions are upstream claims, not evidence that bundled code ran here. Enforce user/tenant eligibility before retrieval and again on returned items; scoring is not authorization. Scope reading-history persistence and external model calls, minimize private data and report untested integrations explicitly.

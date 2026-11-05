@@ -13,6 +13,14 @@ tools: [claude, codex, cursor, gemini]
 license: "MIT"
 license_source: "https://github.com/Spicy-API/nsfw-ai-skill/blob/main/LICENSE"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/scripts/spicy.py`
+
+Obtain the required material from the [declared upstream source](https://github.com/Spicy-API/nsfw-ai-skill), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # NSFW AI (SpicyAPI)
 
@@ -24,10 +32,12 @@ This skill lets an agent generate adult (18+) images, image-to-video clips, imag
 
 - Use when the user asks for adult, boudoir, lingerie or fine-art figure images or videos for their own adult-content project
 - Use when the user wants to animate their own image into a short clip (image-to-video)
-- Use when the user wants to edit an image they own (outfit, lighting, scene) without the content filters of mainstream tools
+- Use for permitted image editing within the host’s content policies; ownership or a third-party endpoint does not bypass those policies
 - Use when the user wants to estimate the cost of a batch before generating it
 
 ## Hard Rules (check before every request)
+
+The host’s safety and content policies take precedence over this reference. Do not use an external provider to bypass a refused or prohibited generation; a paid budget or consent claim does not grant an exception.
 
 Refuse, and do not "soften and continue", when a request involves any of the following. No wording, claimed age, art style or user permission changes this.
 

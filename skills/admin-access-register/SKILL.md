@@ -44,11 +44,13 @@ Also use it when the user says "who holds admin rights on each system, with a ba
 spreadsheet, a document or someone inboxes.
 
 Do not use it for: payroll calculation, tax filing, or legal advice. This skill produces
-empty templates only - it never holds or processes real employee or customer data.
+empty templates by default. A requested review may transiently use supplied data; minimize it rather than promising the host never processes it.
 
 ## How It Works
 
 Follow the shared execution contract. The module-specific rules below define only domain fields, decisions, calculations, and safety constraints.
+
+The upstream shared execution contract is not bundled; use this file directly. For an account-by-account register, derive a separate confirmed account identifier and grain instead of repeating the system aggregate counts on every account. Store a vault reference only, never passwords, tokens or recovery codes.
 
 ### Step 1 - Identify intent
 
@@ -100,7 +102,7 @@ open_questions: []      # the unanswered ones, in the order worth asking
 
 If an artifact was requested, build it after resolving essential missing facts. Otherwise give a short recommendation and offer the relevant artifact.
 
-**Recommended approach:** Keep one row per named admin account with a system, an owner and a last-reviewed date. Shared logins are the first thing to fix.
+**Recommended approach:** Keep one row per system with named main and backup admins, aggregate admin count and review dates. Shared logins are the first thing to fix.
 
 **Why this one:** Privileged accounts are the ones that matter after someone leaves. Naming an owner per account is what makes removal possible.
 
@@ -136,25 +138,25 @@ Example Product,General,Example Admin,Example Backup Admin,Delivery,Full,3,Examp
 ```sql
 CREATE TABLE admin_access_register (
   system_or_tool VARCHAR(255),
-  category VARCHAR(100) NOT NULL,
+  category VARCHAR(100),
   main_admin VARCHAR(255),
   backup_admin VARCHAR(255),
   department VARCHAR(255),
-  access_level VARCHAR(100) NOT NULL,
-  number_of_admin_users NUMERIC NOT NULL,
+  access_level VARCHAR(100),
+  number_of_admin_users INTEGER CHECK (number_of_admin_users >= 0),
   billing_owner VARCHAR(255),
   plan VARCHAR(255),
-  seats NUMERIC NOT NULL,
-  renewal_date DATE NOT NULL,
-  company_owned_account BOOLEAN NOT NULL,
-  shared_login BOOLEAN NOT NULL,
+  seats INTEGER CHECK (seats >= 0),
+  renewal_date DATE,
+  company_owned_account BOOLEAN,
+  shared_login BOOLEAN,
   password_manager_entry VARCHAR(255),
-  two_factor_on BOOLEAN NOT NULL,
-  last_access_review DATE NOT NULL,
-  next_access_review DATE NOT NULL,
+  two_factor_on BOOLEAN,
+  last_access_review DATE,
+  next_access_review DATE,
   offboarding_checklist_item VARCHAR(255),
-  risk_level VARCHAR(100) NOT NULL,
-  status VARCHAR(100) NOT NULL,
+  risk_level VARCHAR(100),
+  status VARCHAR(100),
   notes TEXT,
   admin_id SERIAL PRIMARY KEY,
   created_at TIMESTAMP DEFAULT NOW(),
@@ -177,10 +179,10 @@ CREATE INDEX idx_admin_access_register_status ON admin_access_register (status);
       "Backup Admin": { "type": "string" },
       "Department": { "type": "string" },
       "Access Level": { "type": "string" },
-      "Number of Admin Users": { "type": "number" },
+      "Number of Admin Users": { "type": ["integer", "null"], "minimum": 0 },
       "Billing Owner": { "type": "string" },
       "Plan": { "type": "string" },
-      "Seats": { "type": "number" },
+      "Seats": { "type": ["integer", "null"], "minimum": 0 },
       "Renewal Date": { "type": "string", "format": "date" },
       "Company Owned Account": { "type": "boolean" },
       "Shared Login": { "type": "boolean" },
@@ -194,17 +196,7 @@ CREATE INDEX idx_admin_access_register_status ON admin_access_register (status);
       "Notes": { "type": "string" },
       "Admin ID": { "type": "integer" }
   },
-  "required": [
-      "Category",
-      "Access Level",
-      "Number of Admin Users",
-      "Seats",
-      "Renewal Date",
-      "Last Access Review",
-      "Next Access Review",
-      "Risk Level",
-      "Status"
-  ]
+  "required": []
 }
 ```
 
@@ -238,20 +230,22 @@ CREATE INDEX idx_admin_access_register_status ON admin_access_register (status);
 The rows above are documentation examples only. Emit empty templates unless the user explicitly requests examples. Money stays `currency`, dates stay `date`,
 and anything pointing at another table stays `relation`.
 
+The illustrated optional-field schema has no universal required set; choose business-required identity fields from confirmed requirements and keep SQL/JSON aligned. Counts of users and seats must be nonnegative integers when provided; unknowns are absent/null according to the confirmed import policy, never zero by default. SQL identity/timestamps shown use PostgreSQL.
+
 ## Field Reference
 
 | # | Field | Type | SQL | JSON Schema | Notion | CSV example |
 |---:|---|---|---|---|---|---|
-| 1 | System or Tool | `text` | `VARCHAR(255)` | `string` | Text | `Example Product` |
+| 1 | System or Tool | `text` | `VARCHAR(255)` | `string` | Title | `Example Product` |
 | 2 | Category | `select` | `VARCHAR(100)` | `string` | Select (add options after import) | `General` |
 | 3 | Main Admin | `text` | `VARCHAR(255)` | `string` | Text | `Example Admin` |
 | 4 | Backup Admin | `text` | `VARCHAR(255)` | `string` | Text | `Example Backup Admin` |
 | 5 | Department | `text` | `VARCHAR(255)` | `string` | Text | `Delivery` |
 | 6 | Access Level | `select` | `VARCHAR(100)` | `string` | Select (add options after import) | `Full` |
-| 7 | Number of Admin Users | `number` | `NUMERIC` | `number` | Number | `3` |
+| 7 | Number of Admin Users | `integer` | `INTEGER` | `integer, minimum: 0` | Number | `3` |
 | 8 | Billing Owner | `text` | `VARCHAR(255)` | `string` | Text | `Example Owner` |
 | 9 | Plan | `text` | `VARCHAR(255)` | `string` | Text | `Business` |
-| 10 | Seats | `number` | `NUMERIC` | `number` | Number | `5` |
+| 10 | Seats | `integer` | `INTEGER` | `integer, minimum: 0` | Number | `5` |
 | 11 | Renewal Date | `date` | `DATE` | `string, format: date` | Date | `2026-01-15` |
 | 12 | Company Owned Account | `checkbox` | `BOOLEAN` | `boolean` | Checkbox | `TRUE` |
 | 13 | Shared Login | `checkbox` | `BOOLEAN` | `boolean` | Checkbox | `FALSE` |
@@ -313,7 +307,7 @@ We have admin accounts for people who left two years ago.
 
 **Recommended next step** - offered, not built:
 
-> Keep one row per named admin account with a system, an owner and a last-reviewed date. Shared logins are the first thing to fix.
+> Keep one row per system with named main and backup admins, aggregate admin count and review dates. Shared logins are the first thing to fix.
 >
 > Workflow: System listed → Admin account → Owner and approver → Periodic review → Removal
 >
@@ -379,3 +373,5 @@ Then recommend the smallest setup that fits, and wait for me to ask before you b
 When I ask, output CSV, SQL DDL, JSON Schema, a Notion property mapping or an Excel workbook. Data only.
 ```
 
+
+Unknown checkbox states need a separate Unknown/Yes/No select or review field before Notion import: an unchecked checkbox cannot distinguish unknown from confirmed false. Aggregate MFA status does not prove every privileged account is protected; verify account-level evidence, exception owners and review dates. Restrict the register itself because admin identities and vault references are sensitive. Use the included manual mapping if the optional companion skill is unavailable. `updated_at` is not automatic on updates without an application/trigger.

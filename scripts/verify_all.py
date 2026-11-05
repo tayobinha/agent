@@ -97,8 +97,8 @@ VERIFICATION_SUITE = [
     {
         "category": "UX & Accessibility",
         "checks": [
-            ("UX Audit", ".agent/skills/frontend-design/scripts/ux_audit.py", False),
-            ("Accessibility Check", ".agent/skills/frontend-design/scripts/accessibility_checker.py", False),
+            ("UX Audit", ".agent/scripts/design-checks/ux_audit.py", False),
+            ("Accessibility Check", ".agent/scripts/design-checks/accessibility_checker.py", False),
         ]
     },
     
@@ -126,7 +126,7 @@ VERIFICATION_SUITE = [
         "category": "E2E Testing",
         "requires_url": True,
         "checks": [
-            ("Playwright E2E", ".agent/skills/webapp-testing/scripts/playwright_runner.py", False),
+            ("Playwright E2E", ".agent/scripts/design-checks/playwright_runner.py", False),
         ]
     },
     

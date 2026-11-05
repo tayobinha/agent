@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Modified by AAS: see UPSTREAM-NOTICE.md for scope and validation limits.
 from __future__ import annotations
 
 import argparse
@@ -10,6 +11,7 @@ import re
 import secrets
 import shutil
 import subprocess
+import stat
 import sys
 import zipfile
 from pathlib import Path, PureWindowsPath
@@ -241,7 +243,7 @@ def locate_skills() -> dict[str, Path]:
     for key, directory in DEPENDENCIES.items():
         for parent in skill_candidates():
             candidate = parent / directory
-            if (candidate / "SKILL.md").exists() or (candidate / DEPENDENCY_ENTRYPOINTS[key]).exists():
+            if (candidate / DEPENDENCY_ENTRYPOINTS[key]).is_file():
                 found[key] = candidate
                 break
         if key not in found:
@@ -319,7 +321,7 @@ def prepare_runtime(skills: dict[str, Path]) -> dict:
     environment["PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD"] = "1"
     try:
         install = subprocess.run(
-            [npm, "ci", "--omit=dev", "--no-audit", "--no-fund"],
+            [npm, "ci", "--ignore-scripts", "--omit=dev", "--no-audit", "--no-fund"],
             cwd=tool_root,
             text=True,
             capture_output=True,
@@ -330,7 +332,7 @@ def prepare_runtime(skills: dict[str, Path]) -> dict:
     except subprocess.TimeoutExpired as exc:
         raise PipelineError("采集运行依赖安装超时，请检查 npm 网络后重试") from exc
     if install.returncode:
-        detail = install.stderr.strip() or install.stdout.strip() or "npm ci 执行失败"
+        detail = f"npm ci 退出码 {install.returncode}；请在私有环境检查安装日志"
         raise PipelineError(f"采集运行依赖安装失败：{detail}")
     if not runtime_ready():
         raise PipelineError("采集运行依赖安装完成，但运行时自检未通过")
@@ -350,14 +352,15 @@ def run(command: list[str], environment: dict[str, str] | None = None) -> dict:
         capture_output=True,
         check=False,
         env=environment,
+        timeout=1800,
     )
     if process.returncode:
-        raise PipelineError(process.stdout.strip() or process.stderr.strip() or "子技能执行失败")
+        raise PipelineError(f"子技能执行失败（退出码 {process.returncode}）；在私有环境检查日志，不输出原始凭据或子进程错误")
     lines = [line for line in process.stdout.splitlines() if line.strip()]
     try:
         return json.loads(lines[-1]) if lines else {"status": "completed"}
     except json.JSONDecodeError:
-        return {"status": "completed", "output": process.stdout.strip()}
+        raise PipelineError("子技能未返回有效JSON，不能将输出视为成功") from None
 
 
 def trusted_search_key() -> str:
@@ -383,13 +386,52 @@ def trusted_search_configuration() -> dict:
         "interaction": "browser_login_only",
         "requiresChatSecret": False,
         "autoResume": True,
+        "requiresAccountAndDataApproval": True,
         "sharedAcrossCarriers": True,
     }
 
 
+RUN_MARKER = ".fact-check-x-run"
+
+
+def inspect_private_tree(path: Path) -> None:
+    # Trusted private workspace, not a defense against a concurrent malicious owner.
+    count = total = 0
+    for root, dirs, files in os.walk(path, followlinks=False):
+        for name in dirs + files:
+            entry = Path(root) / name
+            info = entry.lstat()
+            count += 1
+            if stat.S_ISLNK(info.st_mode) or not (stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode)):
+                raise PipelineError("运行目录禁止链接和特殊文件")
+            if stat.S_ISREG(info.st_mode):
+                if info.st_nlink != 1 or info.st_size > 64 * 1024 * 1024:
+                    raise PipelineError("运行文件存在硬链接或超过64MiB限制")
+                total += info.st_size
+            if count > 10000 or total > 512 * 1024 * 1024:
+                raise PipelineError("运行目录超过文件数量或512MiB限制")
+
+
 def require_run(run_dir: str) -> Path:
-    path = Path(run_dir).resolve()
-    path.mkdir(parents=True, exist_ok=True)
+    raw = Path(run_dir).expanduser().absolute()
+    if raw.is_symlink():
+        raise PipelineError("运行目录不能是链接")
+    path = raw.resolve()
+    if path in {Path(path.anchor), Path.home().resolve(), Path.cwd().resolve()}:
+        raise PipelineError("必须使用专用私有运行子目录")
+    path.mkdir(mode=0o700, parents=True, exist_ok=True)
+    info = path.stat()
+    if os.name != "nt" and (info.st_uid != os.getuid() or info.st_mode & 0o077):
+        raise PipelineError("运行目录必须由当前用户拥有且权限为0700")
+    inspect_private_tree(path)
+    marker = path / RUN_MARKER
+    if not marker.exists():
+        if any(path.iterdir()):
+            raise PipelineError("首次运行必须使用空的专用目录")
+        with marker.open("x", encoding="utf-8") as handle:
+            handle.write("fact-check-x/run@1\n")
+    elif marker.read_text(encoding="utf-8") != "fact-check-x/run@1\n":
+        raise PipelineError("运行目录标记不正确")
     return path
 
 
@@ -550,7 +592,8 @@ def require_comparison_provenance(run_dir: Path) -> dict:
 
 def expected_request_ids(manifest: dict) -> list[str]:
     ids = [str(entry.get("requestId") or "") for entry in manifest.get("requests") or []]
-    if not ids or any(not value for value in ids) or len(ids) != len(set(ids)):
+    if (not ids or len(ids) != len(set(ids))
+        or any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", value) for value in ids)):
         raise PipelineError("权威核验请求清单包含空 ID 或重复 ID")
     return ids
 
@@ -641,7 +684,7 @@ def render_run_notices(notices) -> str:
         "<strong>本次运行存在未完成的技术动作</strong>"
         f"<ul>{items}</ul>"
         '<span class="fcx-run-notice-tail">判定口径不因此改变；'
-        "以上项目可能影响相关结论的证据完整性，受影响且无法核验的主张按“疑似误导”呈现。</span></div>"
+        "以上项目可能影响相关结论的证据完整性，受影响且无法核验的主张保持“证据不足”，不得从技术失败推定误导。</span></div>"
     )
 
 
@@ -687,6 +730,7 @@ def normalize_report_file(path: Path, notices=()) -> None:
 
 
 def build_portable_report_package(run_dir: Path) -> dict:
+    inspect_private_tree(run_dir)
     package_path = run_dir / PORTABLE_REPORT_PACKAGE
     package_path.unlink(missing_ok=True)
     reports = {
@@ -858,9 +902,10 @@ def prepare_comparison(args: argparse.Namespace, skills: dict[str, Path]) -> dic
         "stage": "capture_completed",
         "analysisExecution": {
             "mode": "single_pass",
-            "maxToolCallsAfterStageAcknowledgement": 3,
+            "suggestedToolCallsAfterStageAcknowledgement": 3,
+            "correctnessAndSafetyChecksTakePrecedence": True,
             "instructions": [
-                "读取 comparison-task.json 一次，不读取技能源码、契约或完整 results.json 探路",
+                "优先读取 comparison-task.json；必要时读取源码、契约或原始证据以解决错误或歧义",
                 "直接写入 comparison-analysis.json 一次",
                 "执行 complete-comparison 一次，由程序使用完整采集正文校验",
             ],
@@ -897,7 +942,8 @@ def complete_comparison(args: argparse.Namespace, skills: dict[str, Path]) -> di
     run_dir = require_run(args.run_dir)
     require_stage_acknowledged(run_dir, "capture")
     results_path = Path(args.results).resolve()
-    results = validate_and_gate_capture(run_dir, results_path)
+    require_capture_gate(run_dir, results_path)
+    results = validate_capture_results(results_path)
     sync_capture_evidence(run_dir, results_path, results)
     analysis_source = (
         Path(args.analysis).resolve()
@@ -998,6 +1044,7 @@ def build_requests(comparison: dict, requests_dir: Path) -> dict:
     points = comparison.get("knowledgePoints") or []
     if not points:
         raise PipelineError("comparison.json 没有知识点")
+    expected_request_ids({"requests": [{"requestId": point.get("id")} for point in points]})
     requests_dir.mkdir(parents=True, exist_ok=True)
     expected = {f"{point['id']}.json" for point in points}
     stale = [path.name for path in requests_dir.glob("*.json") if path.name not in expected and path.name != "manifest.json"]
@@ -1083,6 +1130,8 @@ def prepare_authority(args: argparse.Namespace) -> dict:
 
 
 def search_authority(args: argparse.Namespace, skills: dict[str, Path]) -> dict:
+    if isinstance(args.max_workers, bool) or not 1 <= args.max_workers <= 12:
+        raise PipelineError("max-workers 必须介于1和12之间")
     run_dir = require_run(args.run_dir)
     require_capture_gate(run_dir)
     authority_gate_path = run_dir / "authority-gate.json"
@@ -1428,6 +1477,7 @@ def merge_verification(comparison: dict, results_dir: Path) -> dict:
     gov_exempt_count = 0
     downgraded_anchor_ids: list[str] = []
     authority_verdicts: dict[tuple[str, str], str] = {}
+    expected_request_ids({"requests": [{"requestId": point.get("id")} for point in comparison.get("knowledgePoints") or []]})
     for point in comparison.get("knowledgePoints") or []:
         path = results_dir / f"{point['id']}.json"
         if not path.exists():
@@ -1825,6 +1875,9 @@ def main() -> int:
         if result.get("status") == "configuration_required":
             return 3
         return 0
+    except subprocess.TimeoutExpired:
+        emit_public_json({"status": "failed", "error": "子技能超过1800秒限制；检查进程和产物后再恢复"})
+        return 1
     except (PipelineError, OSError, ValueError, json.JSONDecodeError) as exc:
         emit_public_json({"status": "failed", "error": str(exc)})
         return 1

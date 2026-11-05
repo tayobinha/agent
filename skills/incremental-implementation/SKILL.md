@@ -9,6 +9,14 @@ date_added: 2026-07-01
 license: MIT
 license_source: https://github.com/addyosmani/agent-skills/blob/main/LICENSE
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/definition-of-done.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/addyosmani/agent-skills), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Incremental Implementation
 
@@ -24,6 +32,8 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 - Any time you're tempted to write more than ~100 lines before testing
 
 **When NOT to use:** Single-file, single-function changes where the scope is already minimal.
+
+Apply the project's actual available commands and commit policy; npm test/build/tsc/lint below are examples. A feature flag must guard backend permissions and effects as well as UI. Database rollback may require forward repair, data recovery and compatibility staging rather than a reversible down migration. Keep removal/replacement slices compatible so separated commits do not leave a broken intermediate state. Report skipped/unavailable checks; passing tests support bounded claims, not proof of correctness.
 
 ## The Increment Cycle
 

@@ -21,13 +21,14 @@ date_added: "2026-02-27"
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 Orchestrate multi-agent incident response with modern SRE practices for rapid resolution and learning:
 
 [Extended thinking: This workflow implements a comprehensive incident command system (ICS) following modern SRE principles. Multiple specialized agents collaborate through defined phases: detection/triage, investigation/mitigation, communication/coordination, and resolution/postmortem. The workflow emphasizes speed without sacrificing accuracy, maintains clear communication channels, and ensures every incident becomes a learning opportunity through blameless postmortems and systematic improvements.]
 
 ## Configuration
+
+Bind the response to the existing incident commander, severity policy, authorized services and change permissions. The Task/subagent names below are host-specific examples, not guaranteed installed tools. Delegate only with user/project authorization; otherwise perform the roles sequentially. Draft status/outreach artifacts first and send/publish only within explicit communication authority. Preserve evidence before mitigation where feasible, record timestamps and uncertainty, and require approved rollback criteria for production writes; urgency does not grant deployment or data-deletion permission.
 
 ### Severity Levels
 - **P0/SEV-1**: Complete outage, security breach, data loss - immediate all-hands response

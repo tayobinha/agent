@@ -1,6 +1,6 @@
 ---
 name: javascript-typescript-typescript-scaffold
-description: "You are a TypeScript project architecture expert specializing in scaffolding production-ready Node.js and frontend applications. Generate complete project structures with modern tooling (pnpm, Vite, N"
+description: "Scaffold TypeScript projects with build tooling, type checking, testing, and configuration."
 risk: critical
 source: community
 date_added: "2026-02-27"
@@ -40,6 +40,8 @@ Determine the project type from user requirements:
 - **CLI**: Command-line tools, automation scripts
 
 ### 2. Initialize Project with pnpm
+
+Choose one scaffold path. For Next/Vite, run the chosen generator in a new empty directory rather than pre-running `pnpm init` and then overwriting it. Inspect the actual generated package/lockfile and supported Node version; the package versions below are historical examples, not current security-approved pins. Do not globally install tooling or overwrite an existing project without authorization. Ignore `.env*` secrets while explicitly allowing a sanitized `.env.example`.
 
 ```bash
 # Install pnpm if needed
@@ -108,7 +110,7 @@ nextjs-project/
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "vitest",
     "type-check": "tsc --noEmit"
   },
@@ -165,7 +167,7 @@ pnpm create vite . --template react-ts
 
 **vite.config.ts**:
 ```typescript
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
@@ -294,8 +296,8 @@ library-name/
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "files": ["dist"],

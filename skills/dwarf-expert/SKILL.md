@@ -9,7 +9,7 @@ allowed-tools:
   - WebSearch
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
 # Overview
 This skill provides technical knowledge and expertise about the DWARF standard and how to interact with DWARF files. Tasks include answering questions about the DWARF standard, providing examples of various DWARF features, parsing and/or creating DWARF files, and writing/modifying/analyzing code that interacts with DWARF data.
@@ -70,6 +70,10 @@ The `--statistics` output helps compare debug info quality across compiler versi
 - **Comparing builds**: Use `--statistics` to detect debug info quality regressions
 - **Debugging debuggers**: Identify malformed DWARF causing debugger issues
 - **DWARF tool development**: Validate parser output against known-good binaries
+
+# Supporting references
+
+The `reference/readelf.md`, `reference/dwarfdump.md` and `reference/coding.md` paths below are not bundled in this single-file catalog copy. Use an existing reviewed upstream installation or the official tool/specification documentation; do not claim these references were loaded. Verify installed tool flags against [LLVM documentation](https://llvm.org/docs/CommandGuide/llvm-dwarfdump.html). Treat binaries as untrusted parser input: use patched tools, bounded resources and an isolated directory; reading debug information does not require executing the binary.
 
 # Parsing DWARF Debug Information
 ## readelf

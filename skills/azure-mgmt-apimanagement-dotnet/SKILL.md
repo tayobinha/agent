@@ -5,6 +5,17 @@ risk: critical
 source: community
 date_added: '2026-02-27'
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
+## Supporting material availability
+
+These paths remain unavailable in this catalog copy:
+
+- `<support-root>/references/policies.md`
+
+Do not invoke a step that requires one of these files. Obtain the original material and review its dependencies, license, and effects before use. Independent inline steps and the bundled helpers can proceed within the user’s authorized scope.
 
 # Azure.ResourceManager.ApiManagement (.NET)
 
@@ -21,7 +32,7 @@ dotnet add package Azure.ResourceManager.ApiManagement
 dotnet add package Azure.Identity
 ```
 
-**Current Version**: v1.3.0
+**Version note**: examples are version-sensitive; resolve and pin a supported SDK package in the target project rather than treating v1.3.0 as current.
 
 ## Environment Variables
 
@@ -40,7 +51,7 @@ using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ApiManagement;
 
-// Always use DefaultAzureCredential
+// Choose a deliberate credential chain; managed identity is preferable in hosted production
 var credential = new DefaultAzureCredential();
 var armClient = new ArmClient(credential);
 
@@ -139,7 +150,7 @@ var productData = new ApiManagementProductData
     IsSubscriptionRequired = true,
     IsApprovalRequired = false,
     SubscriptionsLimit = 1,
-    State = ApiManagementProductState.Published
+    State = ApiManagementProductState.NotPublished
 };
 
 var productCollection = service.GetApiManagementProducts();
@@ -172,11 +183,11 @@ var subOperation = await subscriptionCollection.CreateOrUpdateAsync(
     "my-subscription",
     subscriptionData);
 
-ApiManagementSubscriptionResource subscription = subOperation.Value;
+ApiManagementSubscriptionResource apimSubscription = subOperation.Value;
 
 // Get subscription keys
-var keys = await subscription.GetSecretsAsync();
-Console.WriteLine($"Primary Key: {keys.Value.PrimaryKey}");
+var keys = await apimSubscription.GetSecretsAsync();
+// Store keys only through the approved secret store; never log them.
 ```
 
 ### 5. Set API Policy
@@ -262,11 +273,11 @@ await service.RestoreAsync(WaitUntil.Completed, backupParams);
 
 1. **Use `WaitUntil.Completed`** for operations that must finish before proceeding
 2. **Use `WaitUntil.Started`** for long operations like service creation (30+ min)
-3. **Always use `DefaultAzureCredential`** — never hardcode keys
+3. **Choose an explicit production identity** — never hardcode keys; constrain credential-chain fallbacks
 4. **Handle `RequestFailedException`** for ARM API errors
 5. **Use `CreateOrUpdateAsync`** for idempotent operations
 6. **Navigate hierarchy** via `Get*` methods (e.g., `service.GetApis()`)
-7. **Policy format** — Use XML format for policies; JSON is also supported
+7. **Policy format** — Policies are XML (xml/rawxml or corresponding link formats); JSON is the transport envelope, not a policy language
 8. **Service creation** — Developer SKU is fastest for testing (~15-30 min)
 
 ## Error Handling
@@ -281,7 +292,7 @@ try
 }
 catch (RequestFailedException ex) when (ex.Status == 409)
 {
-    Console.WriteLine("Service already exists");
+    throw; // 409 is a conflict requiring diagnosis, not proof of successful existing state
 }
 catch (RequestFailedException ex) when (ex.Status == 400)
 {
@@ -317,3 +328,9 @@ This skill is applicable to execute the workflow or actions described in the ove
 - Use this skill only when the task clearly matches the scope described above.
 - Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
 - Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+
+## Resource mutation and SDK limits
+
+These snippets are separate examples with omitted project setup and version-specific model types/constructors; they have not been compiled or run against Azure. ResourceIdentifier/AzureLocation require Azure.Core, and WaitUntil/ETag require Azure. Verify exact SDK overloads, required ETags and supported SKU/region capabilities before adaptation. A 409 can indicate another conflict or operation in progress; it is not successful creation. Started operations still need polling and provisioning-state readback. CreateOrUpdate can replace existing configuration and is not harmless because its name sounds idempotent.
+
+Confirm tenant, subscription, resource IDs, RBAC, cost and deployment scope before provisioning. Keep products unpublished until access review; a subscription key alone is not end-user identity or complete API authorization. Rotate one key at a time with consumer migration and readback; do not immediately regenerate both. Service deletion, subscription suspension, policy changes and restore require explicit target approval and recovery planning. Backup with managed identity also requires the actual identity, storage permissions and supported tier; a backup is not a complete rollback guarantee. The policy example does not add JWT validation and its rate limit is not a universal traffic ceiling. Preserve existing policy inheritance and use a reviewed revision before rollout. Omit raw ARM error bodies from public logs.

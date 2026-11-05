@@ -7,8 +7,16 @@ description: |
   makepad 字体, makepad 文字, makepad 排版, makepad 字形
 risk: safe
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `./references/font-system.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Makepad Font Skill
 
@@ -33,7 +41,7 @@ Refer to the local files for detailed documentation:
 1. Read the relevant reference file(s) listed above
 2. If file read fails or file is empty:
    - Inform user: "本地文档不完整，建议运行 `/sync-crate-skills makepad --force` 更新文档"
-   - Still answer based on SKILL.md patterns + built-in knowledge
+   - Use inline examples as historical version-dependent sketches; label uncertain API details and do not claim missing reference verification
 3. If reference file exists, incorporate its content into the answer
 
 ## Text Module Structure
@@ -158,6 +166,8 @@ pub struct LayoutOptions {
 ```
 
 ## Rasterizer Settings
+
+The structs below mix API signatures and illustrative default values and are not compilable Rust declarations. Verify actual types/defaults against the project’s pinned Makepad source before emitting code.
 
 ```rust
 pub struct Settings {

@@ -18,27 +18,19 @@ Use this skill when you need rclone command-line cloud storage manager reference
 
 Rclone is a command-line program to manage files on cloud storage. It is a feature-rich alternative to cloud vendors' web storage interfaces. Over 70 cloud storage products support rclone including S3 object stores, business & consumer file storage services, and standard transfer protocols.
 
-Rclone has powerful cloud equivalents to the unix commands rsync, cp, mv, mount, ls, ncdu, tree, rm, and cat. It preserves timestamps and verifies checksums at all times. Transfers can be restarted from the last good file.
+Rclone has powerful cloud equivalents to the unix commands rsync, cp, mv, mount, ls, ncdu, tree, rm, and cat. Timestamp preservation and checksum verification depend on backend capabilities and transfer options; they are not guaranteed for every transfer. Transfers can be restarted from the last good file.
 
 **Official resources:** [rclone.org](https://rclone.org/) | [Docs](https://rclone.org/docs/) | [Commands](https://rclone.org/commands/) | [Install](https://rclone.org/install/) | [Forum](https://forum.rclone.org/) | [GitHub](https://github.com/rclone/rclone)
 
 ## Prerequisites
 
-Before using rclone, verify it is installed:
+Use only a previously installed and reviewed rclone binary. Check its version:
 
 ```bash
-# Check if rclone is installed
 rclone --version
-
-# If not found, run the install script:
-# See scripts/install.sh in this skill's directory
-sudo -v ; curl https://rclone.org/install.sh | sudo bash
-
-# Or for beta version:
-sudo -v ; curl https://rclone.org/install.sh | sudo bash -s beta
 ```
 
-For offline/manual installation, use the bundled script at `scripts/install.sh`.
+If missing, stop the executable workflow and report the prerequisite. A separate installation task must select an immutable signed release, verify its checksum/signature, stage and inspect it, and obtain approval before installation. Do not pipe a vendor installer to a privileged shell. The historical bundled installer is disabled and does not download or modify anything.
 
 ## Security Warnings
 
@@ -47,12 +39,12 @@ For offline/manual installation, use the bundled script at `scripts/install.sh`.
 
 - **Always use `--dry-run` first** when running `sync`, `move`, `delete`, or `purge` commands. This shows what would happen without actually doing it.
 - **Use `--interactive` / `-i` flag** while learning rclone to avoid accidental data loss. It asks for confirmation before each destructive operation.
-- **Never expose credentials in plain text** on the command line. Use `rclone config` to store credentials securely, or use environment variables.
+- **Never expose credentials in plain text** on the command line. Use an interactive configuration flow and restrict access to its file; default password obscuring is reversible, not secure encryption. Environment variables can also leak through logs or process inspection.
 - **Private keys and tokens** (S3 secret keys, service account JSON, OAuth tokens) must never be committed to version control or logged. The config file `~/.config/rclone/rclone.conf` contains sensitive data — protect it with `chmod 600`.
 - **`rclone purge` ignores all filters** — it deletes everything under the specified path. Use with extreme caution.
 - **`rclone sync` makes dest identical to source** — files in dest that are not in source will be DELETED. Always verify with `--dry-run` first.
-- **Remote control API** (`--rc`) should bind to localhost only by default. Exposing it without authentication (`--rc-htpasswd`) allows anyone to control your rclone instance.
-- **Mount operations** can cause data loss if the mount is interrupted during writes. Use `--vfs-cache-mode full` for safer writes.
+- **Remote control API** (`--rc`) should bind to loopback. For deliberate remote access, require authentication (for example `--rc-htpasswd`), TLS and network restrictions; it can expose powerful operations.
+- **Mount operations** can cause data loss if the mount is interrupted during writes. `--vfs-cache-mode full` can support writes but requires adequate local disk and successful upload/flush; it is not a durability guarantee.
 
 ## Quick Reference
 
@@ -62,11 +54,11 @@ For offline/manual installation, use the bundled script at `scripts/install.sh`.
 # Interactive configuration (recommended)
 rclone config
 
-# Show current config (redacts secrets by default)
-rclone config show
+# Show a redacted config; manually inspect for residual secrets before sharing
+rclone config redacted
 
-# Show full config including secrets (DANGEROUS — do not share output)
-rclone config show --redacted=false
+# Print decrypted config, including sensitive values (do not share or log)
+rclone config show
 
 # List configured remotes
 rclone listremotes
@@ -115,8 +107,8 @@ rclone purge remote:path                 # delete path AND all contents (ignores
 
 # Check integrity
 rclone check /local/path remote:path     # compare source and dest
-rclone checksum remote:path              # verify checksums
-rclone cryptcheck crypt:path             # verify encrypted remote
+rclone checksum SHA256 SHA256SUMS remote:path  # compare with a trusted SUM file
+rclone cryptcheck /local/path crypt:path # compare plaintext source with crypt remote
 
 # Directory operations
 rclone mkdir remote:path                 # create directory
@@ -222,7 +214,7 @@ rclone serve ftp remote:path              # FTP server
 rclone serve s3 remote:path               # S3-compatible server
 rclone serve dlna remote:path             # DLNA media server
 rclone serve restic remote:path           # Restic backup backend
-rclone serve docker remote:path           # Docker registry
+rclone serve docker remote:path           # Docker volume plugin API (not a registry)
 ```
 
 ### Encryption (Crypt Remote)
@@ -237,7 +229,7 @@ rclone copy /local/files crypt:path
 rclone ls crypt:path
 
 # Check integrity of encrypted files
-rclone cryptcheck crypt:path
+rclone cryptcheck /local/files crypt:path
 ```
 
 ## Detailed Reference Files
@@ -306,7 +298,7 @@ rclone config          # interactive setup wizard
 rclone lsd remote:     # verify connection works
 ```
 
-### Backup Local to Cloud
+### Mirror Local to Cloud (not a versioned backup)
 ```bash
 rclone sync --dry-run -P /home/user/documents remote:backup/documents
 # Review dry-run output carefully, then:
@@ -330,7 +322,7 @@ rclone copy -P remote:backup/documents /home/user/restored
 rclone copy --bwlimit 10M -P /data remote:backup
 ```
 
-### Encrypted Backup
+### Encrypted Mirror
 ```bash
 # First configure a crypt remote wrapping your storage remote
 rclone config
@@ -338,9 +330,9 @@ rclone config
 rclone sync -P /sensitive-data crypt:backup
 ```
 
-### Scheduled Backup (cron)
+### Scheduled Mirror (cron)
 ```bash
-# Add to crontab (daily at 2am):
+# After reviewing an equivalent dry run and configuring independent versioned backups, add to crontab (daily at 2am). Sync propagates deletions:
 0 2 * * * rclone sync -P /data remote:backup >> /var/log/rclone.log 2>&1
 ```
 

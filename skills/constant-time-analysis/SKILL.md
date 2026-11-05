@@ -3,8 +3,11 @@ name: constant-time-analysis
 description: "Analyze cryptographic code to detect operations that leak secret data through execution timing variations."
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # Constant-Time Analysis
 
@@ -62,6 +65,22 @@ Based on the file extension or language context, refer to the appropriate guide:
 | TypeScript | `.ts`, `.tsx`                     | references/javascript.md     |
 | Python     | `.py`                             | references/python.md             |
 | Ruby       | `.rb`                             | references/ruby.md                 |
+
+## Runtime prerequisite and execution boundary
+
+This catalog bundles documentation only; `ct_analyzer/analyzer.py` is not included.
+The commands below and in the language references are illustrative upstream usage,
+not an instruction to resolve or execute missing code. Stop if a separately installed,
+reviewed analyzer is unavailable. Record its immutable source identity and inspect its
+complete runtime and locked dependencies before any separately authorized setup.
+Use only existing approved language tools; do not let `uv`, `npx`, PECL or a guide's
+bootstrap commands fetch a moving dependency. Review the selected analyzer's command
+construction and target-execution behavior before using it on untrusted code.
+
+For PHP, require VLD with `vld.execute=0`; refuse any analyzer that falls back to
+OPcache target execution. For compilation, bytecode inspection and all other language
+backends, use an isolated environment without unrelated credentials or network access.
+Do not treat disassembly as proof that a tool cannot execute target code.
 
 ## Quick Start
 
@@ -130,7 +149,7 @@ Note: Swift compiles to native code like C/C++/Go/Rust, so it uses assembly-leve
 | Java                   | JDK with `javac` and `javap` in PATH                      |
 | Kotlin                 | Kotlin compiler (`kotlinc`) + JDK (`javap`) in PATH       |
 | C#                     | .NET SDK + `ilspycmd` (`dotnet tool install -g ilspycmd`) |
-| PHP                    | PHP with VLD extension or OPcache                         |
+| PHP                    | PHP with reviewed VLD extension, target execution disabled                         |
 | JavaScript/TypeScript  | Node.js in PATH                                           |
 | Python                 | Python 3.x in PATH                                        |
 | Ruby                   | Ruby with `--dump=insns` support                          |
@@ -159,9 +178,9 @@ See references/vm-compiled.md for detailed setup instructions and troubleshootin
 
 ## Interpreting Results
 
-**PASSED** - No variable-time operations detected.
+**PASSED** - No configured patterns were detected in this analysis. This is not proof of constant-time execution.
 
-**FAILED** - Dangerous instructions found. Example:
+**FAILED** - Review candidates found; establish secret dependence and target CPU/runtime behavior before calling them vulnerabilities. Example:
 
 ```text
 [ERROR] SDIV
@@ -175,7 +194,7 @@ See references/vm-compiled.md for detailed setup instructions and troubleshootin
 
 For each flagged violation, ask: **Does this operation's input depend on secret data?**
 
-1. **Identify the secret inputs** to the function (private keys, plaintext, signatures, tokens)
+1. **Identify inputs that the threat model actually treats as secret** (for example private keys or tokens; signatures and lengths may be public).
 
 2. **Trace data flow** from the flagged instruction back to inputs
 
@@ -195,10 +214,10 @@ For each flagged violation, ask: **Does this operation's input depend on secret 
 
 | Question                                          | If Yes                | If No                 |
 | ------------------------------------------------- | --------------------- | --------------------- |
-| Is the operand a compile-time constant?           | Likely false positive | Continue              |
+| Is the operand a compile-time constant?           | Check the other operand too | Continue              |
 | Is the operand a public parameter (length, count)?| Likely false positive | Continue              |
 | Is the operand derived from key/plaintext/secret? | **TRUE POSITIVE**     | Likely false positive |
-| Can an attacker influence the operand value?      | **TRUE POSITIVE**     | Likely false positive |
+| Can an attacker influence the operand value?      | Check secret-dependent interaction     | Likely false positive |
 
 ## Limitations
 

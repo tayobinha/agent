@@ -5,6 +5,17 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/assets/vpc-module/`
+- `<support-root>/assets/rds-module/`
+- `<support-root>/references/azure-modules.md`
+- `<support-root>/references/gcp-modules.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Terraform Module Library
 
@@ -20,7 +31,6 @@ Production-ready Terraform module patterns for AWS, Azure, and GCP infrastructur
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Purpose
 
@@ -126,7 +136,7 @@ variable "cidr_block" {
   description = "CIDR block for VPC"
   type        = string
   validation {
-    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", var.cidr_block))
+    condition     = can(cidrnetmask(var.cidr_block))
     error_message = "CIDR block must be valid IPv4 CIDR notation."
   }
 }
@@ -146,6 +156,16 @@ variable "enable_dns_hostnames" {
   description = "Enable DNS hostnames in VPC"
   type        = bool
   default     = true
+}
+
+variable "enable_dns_support" {
+  type    = bool
+  default = true
+}
+
+variable "create_internet_gateway" {
+  type    = bool
+  default = false
 }
 
 variable "tags" {
@@ -267,3 +287,5 @@ func TestVPCModule(t *testing.T) {
 - Use this skill only when the task clearly matches the scope described above.
 - Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
 - Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+
+The VPC fragment does not create routing/NAT or a full private network. Validate every subnet CIDR, non-overlap, VPC containment and sufficient availability-zone entries before planning; route-table/NAT decisions require a separate design. The RDS module and other missing assets cannot be executed from this catalog. Terratest `InitAndApply`/`Destroy` create/delete billable infrastructure: use an authorized disposable account/workspace, immutable provider/module pins, cost limits and task-owned cleanup. Confirm current engine/provider compatibility rather than treating historical versions as current recommendations.

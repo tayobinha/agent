@@ -4,7 +4,8 @@
 
 ## CI/CD Pipeline Integration
 
-```yaml
+```text
+NON-EXECUTABLE CI DESIGN: before adoption, use least-privilege jobs, pin every action to a reviewed full SHA, and provision verified fixed-version tools in a digest-pinned runner image. Never expose credentials during tool provisioning.
 # GitHub Actions - Policy enforcement in PR workflow
 name: Policy Checks
 on:
@@ -32,19 +33,10 @@ jobs:
       - name: OPA Policy Check
         uses: open-policy-agent/setup-opa@v2
         with:
-          version: latest
+          version: EXACT_REVIEWED_VERSION_REQUIRED
       - run: |
-          RESULTS=$(opa eval \
-            --data policies/ \
-            --input terraform/tfplan.json \
-            --format json \
-            "data.terraform" | jq '.result[0].expressions[0].value')
-          DENY_COUNT=$(echo "$RESULTS" | jq '[.. | .deny? // empty | .[] ] | length')
-          if [ "$DENY_COUNT" -gt 0 ]; then
-            echo "::error::Policy violations found:"
-            echo "$RESULTS" | jq '.. | .deny? // empty | .[]'
-            exit 1
-          fi
+          # All custom package namespaces must be evaluated, including missing-input tests.
+          conftest test terraform/tfplan.json --policy policies/ --all-namespaces
 
       - name: Checkov Scan
         uses: bridgecrewio/checkov-action@v12
@@ -69,9 +61,9 @@ jobs:
 
       - name: Install Kyverno CLI
         run: |
-          curl -LO https://github.com/kyverno/kyverno/releases/latest/download/kyverno-cli_linux_amd64.tar.gz
-          tar -xzf kyverno-cli_linux_amd64.tar.gz
-          sudo mv kyverno /usr/local/bin/
+# Tool prerequisite: use a verified preinstalled binary; no network installer runs here.
+
+
 
       - name: Test Kyverno Policies
         run: |
@@ -81,7 +73,7 @@ jobs:
             --output-format table
 
       - name: Conftest Kubernetes Manifests
-        uses: open-policy-agent/conftest-action@v2
+        uses: open-policy-agent/conftest-action@REVIEWED_FULL_SHA
         with:
           files: kubernetes/manifests/
           policy: policies/kubernetes/
@@ -89,6 +81,13 @@ jobs:
 
 
 ## Policy Exception Management
+
+The YAML below is an illustrative registry, not an implemented exception engine.
+Enforce expiry and policy/resource/namespace identity in code; a date field alone
+expires nothing. Protect approval data separately from change authors and restrict
+who can create PolicyException objects. Confirm the installed CRD version and keep
+exceptions narrowly scoped; never exempt an entire rule because a PR requests it.
+
 
 ```yaml
 exception_workflow:
@@ -120,7 +119,7 @@ exception_workflow:
       apiVersion: kyverno.io/v2beta1
       kind: PolicyException
       metadata:
-        name: allow-public-website
+        name: reviewed-legacy-workload-exception
         namespace: web
       spec:
         exceptions:
@@ -133,7 +132,7 @@ exception_workflow:
               kinds:
               - Pod
               names:
-              - legacy-app-*
+              - legacy-app-reviewed
 
   review_schedule:
     - Review all active exceptions quarterly

@@ -13,20 +13,22 @@ tools: [claude-code, codex-cli, copilot, opencode]
 license: "MIT"
 license_source: "https://github.com/glukicov/slideops/blob/main/LICENSE"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # SlideOps: slides from a repo, that tell you when they go stale
 
 > **Catalog copy, frozen at v1.0.0.** The canonical source is
 > [glukicov/slideops](https://github.com/glukicov/slideops), which also carries the deck
 > template, the two citation scripts, the reference docs, and the companion
-> `slides-to-pdf` skill. Install from there; this page summarizes the workflow.
+> `slides-to-pdf` skill. For upstream updates consult that repository; this catalog bundles the support files listed in UPSTREAM-NOTICE.md.
 
 ## Overview
 
 SlideOps has two jobs, and the second one is the point. **Build**: turn a repository into
-a single self-contained HTML slide deck whose every claim came from the code, not from a
-model's impression of the code. **Keep in sync**: make that deck able to prove, months
-later, whether it still matches the repository.
+an HTML slide deck whose factual claims are grounded in reviewed code, not from a
+model's impression of the code. **Keep in sync**: report drift of cited text later; semantic accuracy still requires review.
 
 The mechanism joining them is a citation. Every quoted snippet records the file, the line
 range, and a hash of those source lines at build time, and the deck records the commit it
@@ -50,28 +52,9 @@ milliseconds to run.
 
 ## How It Works
 
-### Step 1: Install from the canonical repo
+### Step 1: Inspect the bundled source
 
-In Claude Code, as a plugin (both skills, background updates):
-
-```text
-/plugin marketplace add glukicov/slideops
-/plugin install slideops@slideops
-```
-
-Or for Codex CLI, Copilot CLI, and OpenCode, one installer covers all of them:
-
-```bash
-git clone https://github.com/glukicov/slideops && cd slideops
-git checkout ba43e89bc7936649be36a1796a62203f704f8c60   # the v1.0.0 release commit
-./install.sh
-```
-
-The checkout pins the exact commit this catalog copy froze at, which is what a reader
-can verify independently. (The canonical repo also blocks retargeting of `v*` tags with
-an active tag ruleset, but a SHA does not ask you to trust that.) `install.sh` symlinks
-the two skills into `~/.claude/skills` (read by Claude Code and OpenCode) and
-`~/.agents/skills` (read by Codex CLI and Copilot CLI).
+This tree includes the HTML template, citation scripts and three references at paths relative to this SKILL.md; no upstream install is required to inspect them. The companion `slides-to-pdf`, `themes.md`, `style-guide.md` and `freshness.md` are not bundled. Use an already reviewed installed browser/rendering tool when needed; missing external tools need a separately scoped setup, not a moving installer fallback.
 
 ### Step 2: Build a deck
 
@@ -114,10 +97,10 @@ Built: commit=179bbdb date=2026-08-28 repo=slideops
 2 current, 0 stale, 2 cited in total.
 ```
 
-`MOVED` means only line numbers shifted (update two attributes, leave the prose).
+`MOVED` means the hashed source block still exists elsewhere; review surrounding context before deciding whether prose remains true.
 `CHANGED` means the quoted code was edited (read the diff, decide whether the slide's
 claim survived). `MISSING` means the file is gone (the slide is probably obsolete). The
-`--json` flag emits a complete repair brief per stale citation, so an agent can fix
+`--json` flag emits a citation repair brief per stale citation, so an agent can fix
 drift without re-reading the repository.
 
 ## Examples
@@ -158,7 +141,7 @@ to be vendored into the deck's own repo.
 
 - Needs a headless Chrome or Chromium binary (Playwright cache or system install) for
   the visual verification pass, and Python 3 for the citation scripts.
-- Works offline except two opt-ins: Mermaid diagrams (a one-time `npx` download) and
+- The bundled template has no external assets; generated decks are offline only after all images/fonts/SVGs are embedded and remote references checked. Optional tooling setup and
   brand-color extraction from a live style guide.
 - The check verifies quoted snippets against the code; it cannot verify prose claims
   that cite nothing.
@@ -178,6 +161,7 @@ to be vendored into the deck's own repo.
   quote secrets, keys, `.env` files, production logs, or customer data; redact internal
   hostnames and identifiers; and finish with a redaction scan of the rendered slides,
   because decks are documents that leave the repository.
+- Citation hashes normalize decoded text lines and use a 12-hex prefix; they are drift indicators, not cryptographic authenticity, byte-identity or semantic proof. Empty/unverified citations must not pass a strict freshness gate.
 - File writes are limited to the deck output folder (default `docs/slides/`) plus its
   companion README.
 

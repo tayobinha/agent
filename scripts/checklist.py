@@ -52,13 +52,13 @@ CHECKS = [
     # P4: Frontend
     {
         "name": "UX Audit",
-        "script": ".agent/skills/frontend-design/scripts/ux_audit.py",
+        "script": ".agent/scripts/design-checks/ux_audit.py",
         "priority": "P4",
         "required": False
     },
     {
         "name": "Accessibility Check",
-        "script": ".agent/skills/frontend-design/scripts/accessibility_checker.py",
+        "script": ".agent/scripts/design-checks/accessibility_checker.py",
         "priority": "P4",
         "required": False
     },

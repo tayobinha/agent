@@ -5,6 +5,16 @@ risk: offensive
 source: community
 date_added: '2026-02-27'
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `./scripts/getArch.sh`
+- `./scripts/makeImage.sh`
+- `./scripts/inferNetwork.sh`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 > **⚠️ AUTHORIZED USE ONLY**
 > This skill is for educational purposes or authorized security assessments only.
@@ -20,8 +30,12 @@ date_added: '2026-02-27'
 >
 > Without that confirmation, remain read-only and provide defensive guidance only. Prefer a sandbox, disposable VM, or controlled lab.
 
-# Download from vendor
-wget http://vendor.com/firmware/update.bin
+## Firmware acquisition (illustrative)
+
+```bash
+# Download only from the verified vendor HTTPS source; preserve its hash/signature.
+# Substitute the actual approved URL, not this placeholder.
+wget https://vendor.example.invalid/firmware/update.bin
 
 # Extract from device via debug interface
 # UART console access
@@ -46,8 +60,8 @@ Logic analyzer     - Protocol capture and analysis
 
 ## Use this skill when
 
-- Working on download from vendor tasks or workflows
-- Needing guidance, best practices, or checklists for download from vendor
+- Reviewing authorized embedded firmware images, extracted filesystems or binary security properties
+- Planning controlled acquisition, emulation and remediation-oriented reporting
 
 ## Do not use this skill when
 
@@ -59,7 +73,10 @@ Logic analyzer     - Protocol capture and analysis
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
+
+## Extraction and emulation isolation
+
+Keep original firmware immutable and record hash/source/version. Extract untrusted images as an unprivileged user in a disposable VM, with output/resource limits and no host secrets or external network access. `chroot` is not a security sandbox: the rootful emulation examples must run only inside that isolated VM. Review extraction symlinks/device nodes and tool versions before access. Do not print or reuse discovered credentials; redact reports and keep findings within the authorized disclosure scope.
 
 ## Firmware Analysis Workflow
 

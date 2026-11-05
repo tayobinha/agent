@@ -17,6 +17,14 @@ allowed-tools:
   - WebFetch
   - Write
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/schema-types.md`
+
+Obtain the required material from the [declared upstream source](https://github.com/AgriciDaniel/claude-seo), or from a user-provided installation of that source. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Schema Markup Analysis & Generation
 
@@ -45,7 +53,9 @@ allowed-tools:
   - Invalid date formats
 - Flag deprecated types (see below)
 
-## Schema Type Status (as of Feb 2026)
+## Schema Type Status (historical snapshot, verify before use)
+
+Schema.org vocabulary validity and Google rich-result eligibility are different. A retired Google result feature does not make its Schema.org type invalid; check current official documentation for the actual search surface before deleting otherwise truthful markup. `schema/templates.json` is not bundled.
 
 Read `references/schema-types.md` for the full list. Key rules:
 
@@ -62,7 +72,7 @@ See `schema/templates.json` for ready-to-use JSON-LD templates for these types.
 ### RESTRICTED (only for specific sites):
 - **FAQ**: ONLY for government and healthcare authority sites (restricted Aug 2023)
 
-### DEPRECATED (never recommend):
+### Historical Google rich-result retirements (not vocabulary invalidation):
 - **HowTo**: Rich results removed September 2023
 - **SpecialAnnouncement**: Deprecated July 31, 2025
 - **CourseInfo, EstimatedSalary, LearningVideo**: Retired June 2025

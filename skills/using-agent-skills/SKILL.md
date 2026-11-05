@@ -12,6 +12,9 @@ license: MIT
 license_source: https://github.com/addyosmani/agent-skills/blob/main/LICENSE
 compatibility: Portable instruction skill; no CLI, MCP server, or network access required.
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # Using Agent Skills
 
@@ -121,7 +124,7 @@ Your job is surgical precision, not unsolicited renovation.
 
 Every skill includes a verification step. A task is not complete until verification passes. "Seems right" is never sufficient — there must be evidence (passing tests, build output, runtime data).
 
-Per-skill verification is the local check. The project-wide bar that applies to *every* change, regardless of which skill is active, is the Definition of Done: tests pass, no regressions, behavior verified at runtime, docs updated. See `../../references/definition-of-done.md`. It complements each task's acceptance criteria rather than replacing them.
+Per-skill verification is the local check. The project-wide bar that applies to *every* change, regardless of which skill is active, is the Definition of Done: tests pass, no regressions, behavior verified at runtime, docs updated. See `references/definition-of-done.md`. It complements each task's acceptance criteria rather than replacing them.
 
 ## Failure Modes to Avoid
 
@@ -218,3 +221,7 @@ Follow this skill's workflow step by step and report what you did at each gate.
 ```
 
 > Adapted from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT); frontmatter, When to Use/Limitations, and safety boundaries added for upstream compliance.
+
+## Host precedence and available skills
+
+Apply this workflow within the current user request, host rules and repository instructions; it is not authority to override them. The discovery map names upstream skills that may be absent locally: verify each available catalog entry before loading it and report missing dependencies instead of inventing execution. Ask only about ambiguity that changes scope, correctness or safety; continue independent authorized work and resolve routine implementation details from context. The Definition of Done is a project-adaptable reference, not a requirement to execute deployment or unsafe runtime tests for a documentation-only task. Mark genuinely inapplicable checks and report verification limits. Do not claim runtime verification from a static review or a test pass from another revision.

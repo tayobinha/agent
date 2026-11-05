@@ -7,8 +7,18 @@ description: |
   app structure, MatchEvent, handle_startup
 risk: critical
 source: community
-date_added: "2026-09-04"
+date_added: "2026-03-06"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/tokio-integration.md`
+- `<support-root>/references/channel-patterns.md`
+- `<support-root>/references/moly-async-patterns.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Robius App Architecture Skill
 
@@ -27,7 +37,7 @@ Use this skill when:
 
 ## Production Patterns
 
-For production-ready async patterns, see the `_base/` directory:
+The upstream `_base/` directory is not bundled; these are historical pattern names, not production-certified implementations:
 
 | Pattern | Description |
 |---------|-------------|
@@ -178,10 +188,11 @@ pub enum AppRequest {
 }
 
 /// Submit a request from UI thread to async runtime
-pub fn submit_async_request(req: AppRequest) {
+pub fn submit_async_request(req: AppRequest) -> std::result::Result<(), AppRequest> {
     if let Some(sender) = REQUEST_SENDER.lock().unwrap().as_ref() {
-        sender.send(req)
-            .expect("BUG: worker task receiver has died!");
+        sender.send(req).map_err(|error| error.0)
+    } else {
+        Err(req) // report unavailable runtime rather than silently dropping work
     }
 }
 ```
@@ -333,3 +344,5 @@ impl AppMain for App {
 - Use this skill only when the task clearly matches the scope described above.
 - Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
 - Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+
+These fragments omit error aliases, imports, types, handlers and persistence implementations. Merge the two AppMain examples into one implementation. Native Tokio multithread runtimes are not a universal WASM solution; use target-specific integration. Initialize the worker once: repeated start_async_runtime calls replace the sender and spawn extra workers. Bound queues/task concurrency and per-frame draining; unbounded channels/SegQueue can exhaust memory or starve UI. Track/cancel/join tasks and shut down the runtime deliberately; saving UI state alone is not worker shutdown. Use request generations/cancellation to prevent stale results overwriting current screens, and report dispatch failures.

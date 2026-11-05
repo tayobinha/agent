@@ -5,7 +5,7 @@ This file contains detailed patterns, checklists, and code samples referenced by
 ## Core Defensive Principles
 
 ### 1. Strict Mode
-Enable bash strict mode at the start of every script to catch errors early.
+Consider strict mode and test its exceptions in the target Bash version. It does not replace explicit error handling.
 
 ```bash
 #!/bin/bash
@@ -14,21 +14,33 @@ set -Eeuo pipefail  # Exit on error, unset variables, pipe failures
 
 **Key flags:**
 - `set -E`: Inherit ERR trap in functions
-- `set -e`: Exit on any error (command returns non-zero)
+- `set -e`: Exit on many unhandled failures; conditional/function contexts have exceptions
 - `set -u`: Exit on undefined variable reference
 - `set -o pipefail`: Pipe fails if any command fails (not just last)
 
 ### 2. Error Trapping and Cleanup
-Implement proper cleanup on script exit or error.
+Implement proper cleanup on script exit or error using a dedicated cleanup handler that validates resources before removal.
 
 ```bash
 #!/bin/bash
 set -Eeuo pipefail
 
-trap 'echo "Error on line $LINENO"' ERR
-trap 'echo "Cleaning up..."; rm -rf "$TMPDIR"' EXIT
+task_tmp=""
 
-TMPDIR=$(mktemp -d)
+cleanup() {
+    local -r exit_code=$?
+    if [[ -n "${task_tmp:-}" && -d "$task_tmp" ]]; then
+        rm -rf -- "$task_tmp"
+    fi
+    exit "$exit_code"
+}
+
+trap 'echo "Error on line $LINENO" >&2' ERR
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+task_tmp=$(mktemp -d) || { echo "ERROR: Failed to create temp directory" >&2; exit 1; }
 # Script code here
 ```
 
@@ -143,19 +155,30 @@ process_files() {
 #!/bin/bash
 set -Eeuo pipefail
 
-trap 'rm -rf -- "$TMPDIR"' EXIT
+task_tmp=""
 
-# Create temporary directory
-TMPDIR=$(mktemp -d) || { echo "ERROR: Failed to create temp directory" >&2; exit 1; }
+cleanup() {
+    local -r exit_code=$?
+    if [[ -n "${task_tmp:-}" && -d "$task_tmp" ]]; then
+        rm -rf -- "$task_tmp"
+    fi
+    exit "$exit_code"
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+task_tmp=$(mktemp -d) || { echo "ERROR: Failed to create temp directory" >&2; exit 1; }
 
 # Create temporary files in directory
-TMPFILE1="$TMPDIR/temp1.txt"
-TMPFILE2="$TMPDIR/temp2.txt"
+TMPFILE1="$task_tmp/temp1.txt"
+TMPFILE2="$task_tmp/temp2.txt"
 
 # Use temporary files
 touch "$TMPFILE1" "$TMPFILE2"
 
-echo "Temp files created in: $TMPDIR"
+echo "Temp files created in: $task_tmp"
 ```
 
 ### Pattern 4: Robust Argument Parsing
@@ -254,41 +277,42 @@ log_error "Error occurred"
 ```
 
 ### Pattern 6: Process Orchestration with Signals
+Manage concurrent child jobs within the script lifecycle, ensuring all child processes are properly tracked, terminated on interrupt, and reaped so no orphaned processes remain.
 
 ```bash
 #!/bin/bash
 set -Eeuo pipefail
 
-# Track background processes
-PIDS=()
+# Track child subprocess PIDs spawned during script execution
+CHILD_PIDS=()
 
 cleanup() {
-    log_info "Shutting down..."
+    log_info "Terminating active child worker jobs..."
 
-    # Terminate all background processes
-    for pid in "${PIDS[@]}"; do
+    # Terminate all tracked child subprocesses
+    for pid in "${CHILD_PIDS[@]}"; do
         if kill -0 "$pid" 2>/dev/null; then
             kill -TERM "$pid" 2>/dev/null || true
         fi
     done
 
-    # Wait for graceful shutdown
-    for pid in "${PIDS[@]}"; do
+    # Wait for child jobs to exit cleanly
+    for pid in "${CHILD_PIDS[@]}"; do
         wait "$pid" 2>/dev/null || true
     done
 }
 
-trap cleanup SIGTERM SIGINT
+trap cleanup SIGTERM SIGINT EXIT
 
-# Start background tasks
-background_task &
-PIDS+=($!)
+# Launch concurrent child worker jobs (ephemeral, bounded to script run)
+worker_job_a &
+CHILD_PIDS+=($!)
 
-another_task &
-PIDS+=($!)
+worker_job_b &
+CHILD_PIDS+=($!)
 
-# Wait for all background processes
-wait
+# Wait for all child worker jobs to finish
+wait "${CHILD_PIDS[@]}"
 ```
 
 ### Pattern 7: Safe File Operations
@@ -312,33 +336,46 @@ safe_move() {
         return 1
     fi
 
-    mv "$source" "$dest"
+    mv -i -- "$source" "$dest"
 }
 
-# Safe directory cleanup
+# Safe directory cleanup with path validation and boundary guards
 safe_rmdir() {
-    local -r dir="$1"
+    local -r target_dir="$1"
 
-    if [[ ! -d "$dir" ]]; then
-        echo "ERROR: Not a directory: $dir" >&2
+    # Validate non-empty and exists
+    if [[ -z "$target_dir" || ! -d "$target_dir" ]]; then
+        echo "ERROR: Target directory does not exist or is invalid: $target_dir" >&2
         return 1
     fi
 
-    # Use -I flag to prompt before rm (BSD/GNU compatible)
-    rm -rI -- "$dir"
+    # Resolve aliases and reject directory symlinks before checking boundaries.
+    [[ ! -L "$target_dir" ]] || { echo "ERROR: Refusing directory symlink" >&2; return 1; }
+    local resolved_dir
+    resolved_dir=$(cd -- "$target_dir" && pwd -P) || return 1
+    case "$resolved_dir" in
+        /|/root|/home|"$HOME"|/etc|/var|/usr|/bin|/sbin|/private/etc|/private/var)
+            echo "ERROR: Refusing to delete protected system path: $resolved_dir" >&2
+            return 1
+            ;;
+    esac
+
+    # Keep deletion interactive, including non-empty directories.
+    # Run only after previewing and authorizing this exact target.
+    rm -ri -- "$resolved_dir"
 }
 
 # Atomic file writes
 atomic_write() {
     local -r target="$1"
-    local -r tmpfile
-    tmpfile=$(mktemp) || return 1
+    local tmpfile
+    tmpfile=$(mktemp "${target}.tmp.XXXXXX") || return 1
 
     # Write to temp file first
-    cat > "$tmpfile"
+    cat > "$tmpfile" || { rm -f -- "$tmpfile"; return 1; }
 
     # Atomic rename
-    mv "$tmpfile" "$target"
+    mv -- "$tmpfile" "$target" || { rm -f -- "$tmpfile"; return 1; }
 }
 ```
 
@@ -495,7 +532,7 @@ check_dependencies
 
 ## Best Practices Summary
 
-1. **Always use strict mode** - `set -Eeuo pipefail`
+1. **Evaluate strict mode** - `set -Eeuo pipefail`
 2. **Quote all variables** - `"$variable"` prevents word splitting
 3. **Use [[ ]] conditionals** - More robust than [ ]
 4. **Implement error trapping** - Catch and handle errors gracefully
@@ -515,3 +552,5 @@ check_dependencies
 - **Bash Strict Mode**: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 - **Google Shell Style Guide**: https://google.github.io/styleguide/shellguide.html
 - **Defensive BASH Programming**: https://www.lifepipe.net/
+
+These are teaching fragments. File existence checks can race with other writers; `mv -i` is interactive, not an atomic no-clobber guarantee. Atomic rename requires the temporary file and target on the same filesystem; preserving original permissions, ownership and durability needs additional handling. Process substitutions do not propagate producer failures to the parent loop; check producers explicitly when required. `mapfile`/`readarray` require Bash 4+, unlike the Bash 3.2 bundled on older macOS environments.

@@ -1,7 +1,7 @@
 ---
 name: agent-orchestrator
 description: Meta-skill que orquestra todos os agentes do ecossistema. Scan automatico de skills, match por capacidades, coordenacao de workflows multi-skill e registry management.
-risk: safe
+risk: critical
 source: community
 date_added: '2026-03-06'
 author: renat
@@ -26,7 +26,8 @@ Meta-skill que orquestra todos os agentes do ecossistema. Scan automatico de ski
 
 ## When to Use This Skill
 
-- When you need specialized assistance with this domain
+- Quando o usuario pede um inventario local de skills ou um plano de coordenacao para uma tarefa com varias capacidades.
+- Quando e necessario comparar candidatos explicitamente, sem executar suas instrucoes nem iniciar agentes.
 
 ## Do Not Use This Skill When
 
@@ -40,19 +41,23 @@ Meta-skill que funciona como camada central de decisao e coordenacao para todo
 o ecossistema de skills. Faz varredura automatica, identifica agentes relevantes
 e orquestra multiplos skills para tarefas complexas.
 
-## Principio: Zero Intervencao Manual
+## Principio: Descoberta Solicitada e Plano Revisavel
 
-- **SEMPRE faz varredura** antes de processar qualquer solicitacao
-- Novas skills sao **auto-detectadas e incluidas** ao criar SKILL.md em qualquer subpasta
+- Faz varredura somente no escopo solicitado; esta skill nao deve interceptar todas as solicitacoes
+- Novas skills sao detectadas na proxima varredura explicita, dentro dos roots e do limite de profundidade
 - Skills removidas sao **auto-excluidas** do registry
-- Nenhum comando manual e necessario para registrar novas skills
+- Execute a varredura explicitamente; o matcher nao inicia uma varredura automaticamente
 
 ---
 
-## Workflow Obrigatorio (Toda Solicitacao)
+## Workflow Para Descoberta Solicitada
 
-Execute estes passos ANTES de processar qualquer request do usuario.
-Os scripts usam paths relativos automaticamente - funciona de qualquer diretorio.
+Execute estes passos apenas quando a tarefa pede esta ferramenta. Scores sao heuristicas locais, nao prova de seguranca, compatibilidade ou autorizacao. Um plano nao executa skills; delegacao, mensagens e publicacao exigem autorizacao do usuario.
+Os scripts localizam arquivos a partir da propria instalacao, mas os comandos abaixo pressupõem que o diretorio pai de `agent-orchestrator` seja o diretorio atual. De outro local, use o caminho absoluto do script.
+
+## Dependencia
+
+Use Python 3.10+ e instale `scripts/requirements.txt` em um ambiente virtual revisado; o parser requer PyYAML. Os comandos abaixo apenas inventariam metadados e produzem planos; nao executam skills.
 
 ## Passo 1: Auto-Discovery (Varredura)
 
@@ -60,7 +65,7 @@ Os scripts usam paths relativos automaticamente - funciona de qualquer diretorio
 python agent-orchestrator/scripts/scan_registry.py
 ```
 
-Ultra-rapido (<100ms) via cache de hashes MD5. So re-processa arquivos alterados.
+Usa cache de hashes SHA-256 para reprocessar arquivos alterados. O tempo depende do tamanho da arvore; nao ha garantia de 100ms.
 Retorna JSON com resumo de todos os skills encontrados.
 
 ## Passo 2: Match De Skills
@@ -73,9 +78,9 @@ Retorna JSON com skills ranqueadas por relevancia. Interpretar o resultado:
 
 | Resultado              | Acao                                                    |
 |:-----------------------|:--------------------------------------------------------|
-| `matched: 0`          | Nenhum skill relevante. Operar normalmente sem skills.  |
-| `matched: 1`          | Um skill relevante. Carregar seu SKILL.md e seguir.     |
-| `matched: 2+`         | Multiplos skills. Executar Passo 3 (orquestracao).      |
+| `matched: 0`          | Nenhum candidato acima do limite heuristico; nao prova ausencia de skills relevantes.  |
+| `matched: 1`          | Um candidato. Inspecionar escopo, arquivos, dependencias e autorizacao antes de selecionar.     |
+| `matched: 2+`         | Multiplos candidatos. Propor um plano somente se a tarefa pede coordenacao.      |
 
 ## Passo 3: Orquestracao (Se Matched >= 2)
 
@@ -96,17 +101,26 @@ python agent-orchestrator/scripts/scan_registry.py && python agent-orchestrator/
 
 ## Skill Registry
 
-O registry vive em:
+Antes de executar, defina `AGENT_ORCHESTRATOR_DATA_DIR` como caminho absoluto de
+um diretorio privado autorizado fora da instalacao da skill. Registry, hashes e
+atribuicoes de projeto ficam nesse diretorio. Nao use um diretorio compartilhado
+ou uma arvore com links simbolicos; inspecione o conteudo antes de reutilizar.
+
+```bash
+export AGENT_ORCHESTRATOR_DATA_DIR="<diretorio-absoluto-autorizado>"
 ```
-agent-orchestrator/data/registry.json
-```
+
+Execute a varredura explicitamente antes do matcher. Falha de leitura, JSON
+invalido ou registry ausente nao significa que nenhuma skill existe. Caminhos
+distintos permanecem no inventario mesmo com nomes iguais; selecao por nome
+ambiguo deve parar. O limite de profundidade do scanner torna o inventario parcial.
 
 ## Locais De Busca
 
 O scanner procura SKILL.md em:
 1. `.claude/skills/*/` (skills registradas no Claude Code)
 2. `*/` (skills standalone no top-level)
-3. `*/*\` (skills em subpastas, ate profundidade 3)
+3. Subpastas ate a profundidade 3 (cobertura parcial)
 
 ## Metadata Por Skill
 
@@ -118,7 +132,7 @@ Cada entrada no registry contem:
 | description    | Descricao completa (triggers inclusos)             |
 | location       | Caminho absoluto do diretorio                      |
 | skill_md       | Caminho absoluto do SKILL.md                       |
-| registered     | Se esta em .claude/skills/ (true/false)            |
+| registered     | Se esta em .claude/skills/ (true/false); nao prova carregamento pelo host            |
 | capabilities   | Tags de capacidade (auto-extraidas + explicitas)   |
 | triggers       | Keywords de ativacao extraidas da description      |
 | language       | Linguagem principal (python/nodejs/bash/none)      |
@@ -207,7 +221,7 @@ Uma skill principal lidera; outras fornecem dados de apoio.
 user_query -> whatsapp-cloud-api (primary) + web-scraper (support) -> result
 ```
 
-## Detalhes Em `References/Orchestration-Patterns.Md`
+## Detalhes em [orchestration-patterns.md](references/orchestration-patterns.md)
 
 ---
 
@@ -218,20 +232,20 @@ Atribuir skills a projetos permite boost de relevancia e contexto persistente.
 ## Arquivo De Projetos
 
 ```
-agent-orchestrator/data/projects.json
+$AGENT_ORCHESTRATOR_DATA_DIR/projects.json
 ```
 
 ## Operacoes
 
 **Criar projeto:**
-Adicionar entrada ao projects.json:
+Adicionar entrada ao array `projects` em projects.json:
 ```json
-{
+{"projects": [{
   "name": "nome-do-projeto",
   "created_at": "2026-02-25T12:00:00",
   "skills": ["web-scraper", "whatsapp-cloud-api"],
   "description": "Descricao do projeto"
-}
+}]}
 ```
 
 **Adicionar skill a projeto:** Atualizar o array `skills` do projeto.
@@ -257,7 +271,7 @@ description: "Descricao com keywords de ativacao..."
 ## Documentacao Da Skill
 
 ```
-3. **Pronto!** O auto-discovery detecta automaticamente na proxima solicitacao.
+3. Execute a varredura explicita para atualizar o inventario parcial.
 
 Opcionalmente, para discovery nativo do Claude Code:
 4. Copiar o SKILL.md para `.claude/skills/<nome>/SKILL.md`
@@ -281,7 +295,7 @@ python agent-orchestrator/scripts/scan_registry.py --status
 
 | Status     | Significado                                        |
 |:-----------|:---------------------------------------------------|
-| active     | SKILL.md com name + description presentes          |
+| active     | name + description presentes; nao significa revisao, seguranca ou completude operacional          |
 | incomplete | SKILL.md existe mas falta name ou description      |
 | missing    | Diretorio existe mas sem SKILL.md                  |
 
@@ -296,7 +310,7 @@ python agent-orchestrator/scripts/scan_registry.py --status
 | whatsapp-cloud-api | messaging, api-integration            | active  |
 | instagram          | social-media, api-integration         | partial |
 
-*Esta tabela e atualizada automaticamente via `scan_registry.py --status`.*
+*Tabela ilustrativa do ecossistema original; o scanner imprime seu inventario atual, mas nao altera esta tabela. Os nomes nao garantem instalacao em AAS.*
 
 ## Best Practices
 

@@ -87,7 +87,7 @@ def run_lighteval_vllm(
         cmd.extend(["--max-samples", str(max_samples)])
 
     if trust_remote_code:
-        cmd.append("--trust-remote-code")
+        raise ValueError("Remote model code is disabled in this credential-bearing wrapper; use a separately reviewed, isolated, pinned workflow")
 
     if use_chat_template:
         cmd.append("--use-chat-template")
@@ -151,7 +151,7 @@ def run_lighteval_accelerate(
         cmd.extend(["--max-samples", str(max_samples)])
 
     if trust_remote_code:
-        cmd.append("--trust-remote-code")
+        raise ValueError("Remote model code is disabled in this credential-bearing wrapper; use a separately reviewed, isolated, pinned workflow")
 
     if use_chat_template:
         cmd.append("--use-chat-template")
@@ -264,6 +264,7 @@ Task format:
     )
 
     args = parser.parse_args()
+    parser.error("This imported wrapper uses incompatible model arguments across lighteval releases. Select/pin a supported release and follow its official CLI documentation; no evaluation was started.")
 
     if args.backend == "vllm":
         run_lighteval_vllm(

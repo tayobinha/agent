@@ -5,10 +5,17 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # FastAPI Router
 
 Create FastAPI routers following established patterns with proper authentication, response models, and HTTP status codes.
+
+## Authorization requirements
+
+The template assumes an `author_id` owner field; adapt it to the real model before use. Update/delete checks are required, not optional. For non-public resources require authentication and tenant/owner filtering on list/get too, preferably in atomic service queries; authentication alone is not authorization. Test anonymous access, another owner and another tenant against every CRUD route. The placeholder template is not executable Python until substituted and integrated.
 
 ## Quick Start
 

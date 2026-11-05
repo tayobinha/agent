@@ -5,6 +5,14 @@ risk: critical
 source: community
 date_added: '2026-02-27'
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/acceptance-criteria.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Microsoft 365 Agents SDK (.NET)
 
@@ -24,6 +32,8 @@ dotnet add package Microsoft.Agents.Storage
 dotnet add package Microsoft.Agents.CopilotStudio.Client
 dotnet add package Microsoft.Identity.Client.Extensions.Msal
 ```
+
+Use placeholders only in committed configuration; supply real secrets through protected providers. The development bypass below must remain loopback-only, never a publicly reachable unauthenticated endpoint. Validate channel/service URLs rather than trusting arbitrary inbound ServiceUrl values. Reuse the MSAL client across requests for meaningful token caching; its reconstruction in the minimal handler loses the in-memory cache. Interactive login belongs in a user-facing native/dev context, not unattended server requests. SampleConnectionSettings and complete project imports are application prerequisites; the inline fragments are not a full buildable project.
 
 ## Configuration (appsettings.json)
 
@@ -167,7 +177,7 @@ public sealed class MyAgent : AgentApplication
 
         var endOfConversation = Activity.CreateEndOfConversationActivity();
         endOfConversation.Code = EndOfConversationCodes.Error;
-        endOfConversation.Text = exception.Message;
+        endOfConversation.Text = "An internal error occurred. Please try again."; // Log details privately with redaction
         await turnContext.SendActivityAsync(endOfConversation, ct);
     }
 }

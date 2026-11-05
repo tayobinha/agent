@@ -5,6 +5,13 @@ risk: critical
 source: community
 date_added: '2026-02-27'
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
+
+## Restored helper safety
+
+`scripts/setup_servicebus.py` can create or delete Service Bus queues, topics, and subscriptions. Delete commands require `--confirm-delete`; subscription creation with `--filter` replaces the default rule on the newly created subscription. Confirm the namespace and exact entity/action with the user before live use; prefer a disposable test namespace.
 
 # Azure Service Bus SDK for Python
 
@@ -13,7 +20,7 @@ Enterprise messaging for reliable cloud communication with queues and pub/sub to
 ## Installation
 
 ```bash
-pip install azure-servicebus azure-identity
+pip install azure-servicebus azure-identity aiohttp
 ```
 
 ## Environment Variables
@@ -24,6 +31,10 @@ SERVICEBUS_QUEUE_NAME=myqueue
 SERVICEBUS_TOPIC_NAME=mytopic
 SERVICEBUS_SUBSCRIPTION_NAME=mysubscription
 ```
+
+## Example boundaries
+
+Receiving/settling messages changes broker state; completing a DLQ message deletes it. Use peek for inspection, authorize replay/discard separately, redact payloads, close credentials as well as clients, and make consumers idempotent. Examples omit application handlers, imports and production lock renewal; they are sketches, not standalone programs.
 
 ## Authentication
 

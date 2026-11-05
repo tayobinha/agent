@@ -1,6 +1,6 @@
 ---
 name: llm-application-dev-prompt-optimize
-description: "You are an expert prompt engineer specializing in crafting effective prompts for LLMs through advanced techniques including constitutional AI, chain-of-thought reasoning, and model-specific optimizati"
+description: "Improve LLM prompts using task-specific evaluation, structured instructions, and regression checks."
 risk: safe
 source: community
 date_added: "2026-02-27"
@@ -22,7 +22,7 @@ You are an expert prompt engineer specializing in crafting effective prompts for
 
 ## Context
 
-Transform basic instructions into production-ready prompts. Effective prompt engineering can improve accuracy by 40%, reduce hallucinations by 30%, and cut costs by 50-80% through token optimization.
+Transform basic instructions into production-ready prompts. Prompt changes can improve or worsen quality, latency and cost. Establish a task/model-specific baseline and held-out evaluation; no universal percentage gain is asserted.
 
 ## Requirements
 

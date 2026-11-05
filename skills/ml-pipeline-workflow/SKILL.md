@@ -5,6 +5,16 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/assets/pipeline-dag.yaml.template`
+- `<support-root>/references/data-preparation.md`
+- `<support-root>/references/model-training.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # ML Pipeline Workflow
 
@@ -20,7 +30,6 @@ Complete end-to-end MLOps pipeline orchestration from data preparation through m
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Overview
 
@@ -71,7 +80,7 @@ This skill provides comprehensive guidance for building production ML pipelines 
 
 ### Reference Documentation
 
-See the `references/` directory for detailed guides:
+The following upstream reference guides are not bundled in this catalog tree; obtain and inspect them before relying on their procedures:
 - **data-preparation.md** - Data cleaning, validation, and feature engineering
 - **model-training.md** - Training workflows and best practices
 - **model-validation.md** - Validation strategies and metrics
@@ -79,7 +88,7 @@ See the `references/` directory for detailed guides:
 
 ### Assets and Templates
 
-The `assets/` directory contains:
+The following upstream assets are not bundled in this catalog tree:
 - **pipeline-dag.yaml.template** - DAG template for workflow orchestration
 - **training-config.yaml** - Training configuration template
 - **validation-checklist.md** - Pre-deployment validation checklist
@@ -128,6 +137,10 @@ stages = [
    - Deploy to serving infrastructure
    - Configure monitoring
    - Validate production traffic
+
+## Evaluation boundaries
+
+Split by the actual independence unit (for example entity/time), fit preprocessing only on training data, and keep the final test set out of tuning. Pin datasets/code/model artifacts and record baseline metrics plus uncertainty. Cloud training, external experiment tracking and deployment require data-sharing/cost authorization. Treat the inline YAML as a conceptual DAG, not a directly executable Airflow/Kubeflow schema.
 
 ## Best Practices
 

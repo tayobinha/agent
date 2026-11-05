@@ -25,7 +25,10 @@ Execute tasks from a track's implementation plan, following the workflow rules d
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
+
+## Repository boundaries
+
+Respect explicit user/repository workflow constraints over this generic process, including supplied plans that must not be edited and restrictions on commits/checkpoints. Validate a track ID as a single existing directory name; reject path traversal and shell metacharacters. Read status/diff before changes, stage only task-owned paths, and preserve unrelated work. Slash commands require an installed Conductor integration; this file does not install one.
 
 ## Pre-flight Checks
 
@@ -158,7 +161,7 @@ Step 3: Refactoring while keeping tests green
 **Commit changes** (following commit strategy from workflow.md):
 
 ```bash
-git add -A
+git add -- <explicit-task-owned-paths>
 git commit -m "{commit_prefix}: {task description} ({trackId})"
 ```
 

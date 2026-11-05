@@ -5,6 +5,14 @@ risk: critical
 source: community
 date_added: '2026-02-27'
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/acceptance-criteria.md`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # Microsoft 365 Agents SDK (TypeScript)
 
@@ -59,6 +67,8 @@ startServer(agent);
 ```
 
 ## Streaming responses with Azure OpenAI
+
+This optional example additionally requires reviewed `ai` and `@ai-sdk/azure` dependencies; inspect their installed streaming event schemas. Verify tenant/audience/token validation in the actual hosting configuration before exposing an agent endpoint. Incoming activities are untrusted and must not authorize arbitrary tool use, secret disclosure or messages to unrelated recipients.
 
 ```typescript
 import { azure } from "@ai-sdk/azure";

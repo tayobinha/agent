@@ -5,6 +5,9 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # Azure AI Voice Live SDK
 
@@ -23,6 +26,10 @@ AZURE_COGNITIVE_SERVICES_ENDPOINT=https://<region>.api.cognitive.microsoft.com
 # For API key auth (not recommended for production)
 AZURE_COGNITIVE_SERVICES_KEY=<api-key>
 ```
+
+## Runtime and privacy boundaries
+
+These snippets are version-sensitive sketches, not complete audio clients. Verify installed SDK/API version, resource endpoint, model availability and token audience together; reference defaults conflict with some explicit scopes below. Close async credentials explicitly, bound session duration/audio memory and cancel+await capture tasks in finally. Audio/transcripts leave the machine for Azure: obtain recording/upload authorization, minimize retention/logs and keep secrets in configured credentials. Validate tool names/JSON schemas and user authorization server-side; generated function calls are requests, not permission.
 
 ## Authentication
 
@@ -75,6 +82,10 @@ async def main():
             "voice": "alloy"
         })
         
+        # Supply a user turn, then explicitly request a response.
+        await conn.conversation.item.create(item={"type": "message", "role": "user",
+            "content": [{"type": "input_text", "text": "Hello"}]})
+        await conn.response.create()
         # Listen for events
         async for event in conn:
             print(f"Event: {event.type}")

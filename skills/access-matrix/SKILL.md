@@ -44,11 +44,13 @@ Also use it when the user says "what each role can see and change", or describes
 spreadsheet, a document or someone inboxes.
 
 Do not use it for: payroll calculation, tax filing, or legal advice. This skill produces
-empty templates only - it never holds or processes real employee or customer data.
+empty templates by default. A requested review may use supplied data transiently; do not imply that the host never processes it.
 
 ## How It Works
 
 Follow the shared execution contract. The module-specific rules below define only domain fields, decisions, calculations, and safety constraints.
+
+The upstream shared contract is not bundled here; this procedure must remain usable on its own.
 
 ### Step 1 - Identify intent
 
@@ -106,6 +108,8 @@ If an artifact was requested, build it after resolving essential missing facts. 
 
 **Workflow:** Role list → System inventory → Access rows → Quarterly review → Removal
 
+Role columns contain permission scopes, not names. Use explicit no-access/unknown markers and deny by default; executive titles do not imply unrestricted access. In an actual review, compare intended grants with observed system grants and record reviewer, approval, evidence date and next review. Quarterly is a starting cadence; handle joiner/mover/leaver changes promptly.
+
 ### Step 5 - Build only on request
 
 Once the user asks for it, derive the fields from the confirmed context and emit the
@@ -130,7 +134,7 @@ that need a number, date or currency format applied.
 
 ```csv
 Module,Module ID,Layer,SME Tier,Owner / CEO,Board,Finance,Tax,HR,IT & Admin,Department Head,Line Manager,Employee,Intern,Client,Confidential
-Invoices & Billing,,Layer 8: Operate,Small,Full - all modules,Read - board pack only,"Read, add, edit - payroll and invoices","Read, add, edit - tax register",Full - people and compliance modules,"Read, add, edit - assets and access",Example Reviewer,"Read, add, edit - own team",Read - own records,Read - onboarding only,Example Customer,Internal
+Invoices & Billing,,Layer 8: Operate,Small,Only explicitly approved modules and actions,Read - board pack only,"Read, add, edit - payroll and invoices","Read, add, edit - tax register",Read, add, edit - approved people modules,"Read, add, edit - assets and access",Read - approved departmental invoice summary,"Read, add, edit - own team",Read - own records,Read - onboarding only,Read - own issued invoices,Internal
 ```
 
 ```sql
@@ -138,7 +142,7 @@ CREATE TABLE access_matrix (
   module VARCHAR(255),
   module_id SERIAL PRIMARY KEY,
   layer VARCHAR(255),
-  sme_tier VARCHAR(100) NOT NULL,
+  sme_tier VARCHAR(100),
   owner_ceo VARCHAR(255),
   board VARCHAR(255),
   finance VARCHAR(255),
@@ -150,7 +154,7 @@ CREATE TABLE access_matrix (
   employee VARCHAR(255),
   intern VARCHAR(255),
   client VARCHAR(255),
-  confidential VARCHAR(100) NOT NULL,
+  confidential VARCHAR(100),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -180,10 +184,7 @@ CREATE TABLE access_matrix (
       "Client": { "type": "string" },
       "Confidential": { "type": "string" }
   },
-  "required": [
-      "SME Tier",
-      "Confidential"
-  ]
+  "required": []
 }
 ```
 
@@ -211,6 +212,8 @@ CREATE TABLE access_matrix (
 The rows above are documentation examples only. Emit empty templates unless the user explicitly requests examples. Money stays `currency`, dates stay `date`,
 and anything pointing at another table stays `relation`.
 
+The shown schema is illustrative. Derive required fields from confirmed record identity and access-review requirements; `SME Tier` is not intrinsically required to represent a permission. The SQL uses PostgreSQL `SERIAL`/`NOW()`; adapt identity and timestamp syntax to the confirmed engine. A matrix row describes intended permissions, not proof of enforced permissions.
+
 ## Field Reference
 
 | # | Field | Type | SQL | JSON Schema | Notion | CSV example |
@@ -219,17 +222,17 @@ and anything pointing at another table stays `relation`.
 | 2 | Module ID | `id` | `SERIAL PRIMARY KEY` | `integer` | Text (preserve source ID) | `(blank)` |
 | 3 | Layer | `text` | `VARCHAR(255)` | `string` | Text | `Layer 8: Operate` |
 | 4 | SME Tier | `select` | `VARCHAR(100)` | `string` | Select (add options after import) | `Small` |
-| 5 | Owner / CEO | `text` | `VARCHAR(255)` | `string` | Text | `Full - all modules` |
+| 5 | Owner / CEO | `text` | `VARCHAR(255)` | `string` | Text | `Only explicitly approved modules and actions` |
 | 6 | Board | `text` | `VARCHAR(255)` | `string` | Text | `Read - board pack only` |
 | 7 | Finance | `text` | `VARCHAR(255)` | `string` | Text | `Read, add, edit - payroll and invoices` |
 | 8 | Tax | `text` | `VARCHAR(255)` | `string` | Text | `Read, add, edit - tax register` |
-| 9 | HR | `text` | `VARCHAR(255)` | `string` | Text | `Full - people and compliance modules` |
+| 9 | HR | `text` | `VARCHAR(255)` | `string` | Text | `Read, add, edit - approved people modules` |
 | 10 | IT & Admin | `text` | `VARCHAR(255)` | `string` | Text | `Read, add, edit - assets and access` |
-| 11 | Department Head | `text` | `VARCHAR(255)` | `string` | Text | `Example Reviewer` |
+| 11 | Department Head | `text` | `VARCHAR(255)` | `string` | Text | `Read - approved departmental invoice summary` |
 | 12 | Line Manager | `text` | `VARCHAR(255)` | `string` | Text | `Read, add, edit - own team` |
 | 13 | Employee | `text` | `VARCHAR(255)` | `string` | Text | `Read - own records` |
 | 14 | Intern | `text` | `VARCHAR(255)` | `string` | Text | `Read - onboarding only` |
-| 15 | Client | `text` | `VARCHAR(255)` | `string` | Text | `Example Customer` |
+| 15 | Client | `text` | `VARCHAR(255)` | `string` | Text | `Read - own issued invoices` |
 | 16 | Confidential | `select` | `VARCHAR(100)` | `string` | Select (add options after import) | `Internal` |
 
 ## Select Options

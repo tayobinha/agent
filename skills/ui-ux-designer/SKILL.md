@@ -16,12 +16,15 @@ date_added: '2026-02-27'
 - The task is unrelated to ui ux designer
 - You need a different domain or tool outside this scope
 
+## Example workflow
+
+For a signup redesign, identify the user task and existing completion/drop-off evidence, sketch the smallest flow, and define default/loading/error/success states. Use real approved copy or label placeholders. Prototype keyboard order, visible focus, error associations and responsive reflow; test the rendered flow with representative users and assistive technology where available. Record observed failures and revise before handoff. Do not invent interviews, personas, conversion lifts or accessibility certification. A design mockup/automated scan alone cannot establish WCAG conformance; name the target criteria, tested scope and remaining gaps. Research recordings and private screenshots require consent and approved storage.
+
 ## Instructions
 
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 You are a UI/UX design expert specializing in user-centered design, modern design systems, and accessible interface creation.
 

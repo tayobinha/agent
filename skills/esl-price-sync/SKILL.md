@@ -2,7 +2,7 @@
 name: esl-price-sync
 description: "Synchronizes retail prices between ERP/POS systems and Electronic Shelf Labels (SES-imagotag, ZKONG, Pricer, Hanshow, SOLUM) with delta watermarking, idempotency, and battery modeling. Trigger phrases: esl price sync, electronic shelf labels, zkong sync, ses imagotag price, ghost pricing audit."
 category: architecture
-risk: safe
+risk: critical
 source: community
 source_repo: wwewtech/esl-price-sync
 source_type: community
@@ -50,10 +50,10 @@ Do NOT use this skill when:
    - If an incoming price payload has $\text{version\_timestamp} \le \text{last\_applied\_version}$, the ESL middleware MUST discard the payload to eliminate race condition reversions.
 
 4. **RF Gateway Rate-Limiting & Battery Longevity Budget**:
-   - Each physical e-paper display refresh costs between $12\ \mu\text{Ah}$ and $25\ \mu\text{Ah}$.
+   - Illustrative assumptions only: each physical e-paper display refresh may cost between $12\ \mu\text{Ah}$ and $25\ \mu\text{Ah}$.
    - A dual-CR2450 battery pack provides $1,200\text{ mAh}$ nominal capacity ($960\text{ mAh}$ usable considering passivation and low-temperature shelf environments).
-   - **The 3-Update Daily Rule**: Limiting tag updates to $\le 3$ refreshes per day guarantees a $5.5\text{--}7\text{ year}$ operational lifespan.
-   - **Base Station Queue Throttling**: Gateways operate over shared Sub-GHz (868/915 MHz) or proprietary 2.4 GHz RF channels. Batch transmissions must not exceed 150 tag updates per gateway per minute to prevent RF collision retries from draining batteries.
+   - **Illustrative refresh budget**: A three-refresh daily budget is a planning assumption, not a lifespan guarantee; use measured vendor-specific standby, retry and refresh consumption, temperature and battery configuration.
+   - **Base Station Queue Throttling**: Gateways operate over shared Sub-GHz (868/915 MHz) or proprietary 2.4 GHz RF channels. Use the measured vendor gateway capacity; the examples assume a configurable 150 tag updates per gateway per minute to prevent RF collision retries from draining batteries.
 
 5. **Read-Only Audit Mode by Default**:
    - Diagnostic and reconciliation tasks MUST execute in read-only audit mode.
@@ -84,54 +84,59 @@ import time
 from typing import Dict, List, Optional
 
 def compute_sku_hash(item: dict) -> str:
-    payload = f"{item['sku']}:{item['price']}:{item['promo_price']}:{item['uom']}:{item['template']}"
+    import json
+    payload = json.dumps({key: item[key] for key in
+                         ("sku", "price", "promo_price", "currency", "uom", "barcode", "template", "tag_id")},
+                         sort_keys=True, separators=(",", ":"), allow_nan=False)
     return hashlib.sha256(payload.encode('utf-8')).hexdigest()
 
 class ESLDeltaSyncPipeline:
     def __init__(self, watermark_db: dict, max_rate_per_min: int = 150):
-        self.watermark_db = watermark_db  # SKU -> last_pushed_hash
+        if max_rate_per_min <= 0:
+            raise ValueError("Rate must be positive")
+        self.watermark_db = watermark_db  # SKU -> {version: int, content_hash: str}
         self.max_rate_per_min = max_rate_per_min
         self.last_tx_time = 0.0
 
     def process_catalog_stream(self, incoming_feed: List[dict], dry_run: bool = True) -> dict:
-        to_push = []
-        unchanged = 0
-
+        # Single-worker example: production needs a transactional per-SKU compare-and-set
+        # and a durable outbox; never run concurrent writers against this plain dict.
+        pending = {}
         for item in incoming_feed:
+            version = item['version']
+            if type(version) is not int or version < 1:
+                raise ValueError("Positive monotonic integer version required")
             sku = item['sku']
+            previous = pending.get(sku) or self.watermark_db.get(sku)
+            if previous and version == previous['version'] and compute_sku_hash(item) != previous['content_hash']:
+                raise ValueError("Conflicting payload for the same version")
+            if previous and version <= previous['version']:
+                continue
             current_hash = compute_sku_hash(item)
-            last_hash = self.watermark_db.get(sku)
-
-            if current_hash != last_hash:
-                idempotency_key = hashlib.sha1(f"{sku}:{item['version']}:{current_hash}".encode()).hexdigest()
-                to_push.append({
-                    "sku": sku,
-                    "tag_id": item['tag_id'],
-                    "price_data": item,
-                    "idempotency_key": idempotency_key,
-                    "content_hash": current_hash
-                })
-            else:
-                unchanged += 1
-
+            pending[sku] = {'version': version, 'content_hash': current_hash, 'item': item}
         if dry_run:
-            return {"mode": "DRY_RUN", "queued_for_rf": len(to_push), "unchanged": unchanged}
-
-        # Rate-limited physical transmission
+            return {'mode': 'DRY_RUN', 'accepted_versions': len(pending)}
         sent = 0
-        min_interval = 60.0 / self.max_rate_per_min
-        for job in to_push:
-            now = time.time()
-            elapsed = now - self.last_tx_time
-            if elapsed < min_interval:
-                time.sleep(min_interval - elapsed)
+        for sku, candidate in pending.items():
+            previous = self.watermark_db.get(sku)
+            if previous and candidate['version'] <= previous['version']:
+                continue
+            if not previous or candidate['content_hash'] != previous['content_hash']:
+                delay = 60.0 / self.max_rate_per_min - (time.monotonic() - self.last_tx_time)
+                if delay > 0:
+                    time.sleep(delay)
+                job = {'sku': sku, 'tag_id': candidate['item']['tag_id'],
+                       'price_data': candidate['item'],
+                       'idempotency_key': hashlib.sha256(f"{sku}:{candidate['version']}:{candidate['content_hash']}".encode()).hexdigest()}
+                # Adapter must fail on missing physical ACK; API acceptance alone is insufficient.
+                if transmit_to_esl_gateway(job) is not True:
+                    raise RuntimeError("Physical acknowledgement not confirmed; watermark unchanged")
+                self.last_tx_time = time.monotonic()
+                sent += 1
+            # Advance the version even when content is unchanged, preventing older replays.
+            self.watermark_db[sku] = {'version': candidate['version'], 'content_hash': candidate['content_hash']}
+        return {'mode': 'LIVE_COMMITTED', 'sent_deltas': sent}
 
-            transmit_to_esl_gateway(job)
-            self.watermark_db[job['sku']] = job['content_hash']
-            self.last_tx_time = time.time()
-            sent += 1
-
-        return {"mode": "LIVE_COMMITTED", "sent_deltas": sent, "unchanged": unchanged}
 ```
 
 ### Archetype 2: Reconciliation Audit Report Schema
@@ -167,6 +172,12 @@ def estimate_tag_battery_years(
     uAh_per_refresh: float = 18.0,
     standby_uA: float = 1.2
 ) -> float:
+    import math
+    values = (updates_per_day, ambient_temp_celsius, battery_mah, uAh_per_refresh, standby_uA)
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) for v in values):
+        raise ValueError("Finite numeric battery assumptions required")
+    if updates_per_day < 0 or battery_mah <= 0 or uAh_per_refresh <= 0 or standby_uA < 0:
+        raise ValueError("Nonnegative usage and positive capacity/refresh cost required")
     # Temperature de-rating factor (freezer sections de-rate capacity significantly)
     temp_factor = 0.65 if ambient_temp_celsius < 0.0 else (0.85 if ambient_temp_celsius < 10.0 else 1.0)
     effective_mah = battery_mah * 0.85 * temp_factor  # 85% usable chemistry margin
@@ -174,6 +185,8 @@ def estimate_tag_battery_years(
     daily_drain_uAh = (updates_per_day * uAh_per_refresh) + (standby_uA * 24.0)
     daily_drain_mAh = daily_drain_uAh / 1000.0
 
+    if daily_drain_mAh == 0:
+        raise ValueError("A positive drain estimate is required")
     lifespan_days = effective_mah / daily_drain_mAh
     return round(lifespan_days / 365.25, 2)
 ```
@@ -185,7 +198,7 @@ Before finalizing any ESL integration, sync workflow, or audit output:
 - [ ] **Idempotency Proof**: Monotonic versioning and idempotency keys attached to every modification payload.
 - [ ] **5-Layer Traceability**: Explicit separation between ERP status, server queue, and base station physical tag ACK.
 - [ ] **RF Rate-Limiting**: Gateway transmission queued at $\le 150$ updates/min per AP.
-- [ ] **Battery Budget Checked**: Verified tag refresh schedule does not breach 3 updates/day lifespan limit.
+- [ ] **Battery Budget Checked**: Verified the tag refresh schedule against measured vendor battery assumptions; no fixed lifespan guarantee.
 - [ ] **Layout Safety**: Text width and font truncation verified against display canvas dimensions.
 - [ ] **Dry-Run Audit Default**: Executed read-only reconciliation prior to proposing live write broadcasts.
 

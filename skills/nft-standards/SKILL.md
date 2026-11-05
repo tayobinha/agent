@@ -5,6 +5,21 @@ risk: critical
 source: community
 date_added: "2026-02-27"
 ---
+## Supporting material availability
+
+This catalog copy contains the inline guidance below, but does not include the following supporting paths. They are external prerequisites, not bundled files:
+
+- `<support-root>/references/erc721.md`
+- `<support-root>/references/erc1155.md`
+- `<support-root>/references/metadata-standards.md`
+- `<support-root>/references/enumeration.md`
+- `<support-root>/assets/erc721-contract.sol`
+- `<support-root>/assets/erc1155-contract.sol`
+- `<support-root>/assets/metadata-schema.json`
+- `<support-root>/assets/metadata-uploader.py`
+
+Ask for the original supporting material or an existing installation before using a step that depends on these paths; this catalog does not identify a verified download source for them. Resolve each path relative to that installation, inspect its contents, and verify any applicable license and execution prerequisites. Do not run a command or claim a referenced procedure was followed until its required file exists. Do not fabricate the missing scripts or treat an unrelated file with the same name as equivalent. Independent steps fully documented here can proceed within the user’s authorized scope; report any dependent step as unavailable.
+
 
 # NFT Standards
 
@@ -20,7 +35,6 @@ Master ERC-721 and ERC-1155 NFT standards, metadata best practices, and advanced
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Use this skill when
 
@@ -30,6 +44,8 @@ Master ERC-721 and ERC-1155 NFT standards, metadata best practices, and advanced
 - Creating soulbound tokens (non-transferable)
 - Implementing royalties and revenue sharing
 - Developing dynamic/evolving NFTs
+
+These are illustrative legacy OpenZeppelin 4.x fragments, not audited production contracts. Pin and compile against a reviewed compatible release; OpenZeppelin 5 uses different hooks/Ownable constructors. Missing helper bodies/metadata/constructors must be implemented and tested in disposable local chains. No deployment, mint, fund transfer or metadata publication is implied by review.
 
 ## ERC-721 (Non-Fungible Token Standard)
 
@@ -41,6 +57,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MyNFT is ERC721URIStorage, ERC721Enumerable, Ownable {
     using Counters for Counters.Counter;
@@ -57,9 +74,11 @@ contract MyNFT is ERC721URIStorage, ERC721Enumerable, Ownable {
         require(_tokenIds.current() + quantity <= MAX_SUPPLY, "Exceeds max supply");
         require(msg.value >= MINT_PRICE * quantity, "Insufficient payment");
 
+        // Reserve the entire batch before the first receiver callback.
+        uint256 firstId = _tokenIds.current() + 1;
+        for (uint256 i = 0; i < quantity; i++) { _tokenIds.increment(); }
         for (uint256 i = 0; i < quantity; i++) {
-            _tokenIds.increment();
-            uint256 newTokenId = _tokenIds.current();
+            uint256 newTokenId = firstId + i;
             _safeMint(msg.sender, newTokenId);
             _setTokenURI(newTokenId, generateTokenURI(newTokenId));
         }
@@ -91,7 +110,7 @@ contract MyNFT is ERC721URIStorage, ERC721Enumerable, Ownable {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable)
+        override(ERC721URIStorage, ERC721Enumerable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -133,8 +152,8 @@ contract GameItems is ERC1155, Ownable {
     ) external onlyOwner {
         require(tokenSupply[id] + amount <= maxSupply[id], "Exceeds max supply");
 
+        tokenSupply[id] += amount; // Effects before ERC-1155 receiver callback.
         _mint(to, id, amount, "");
-        tokenSupply[id] += amount;
     }
 
     function mintBatch(
@@ -234,10 +253,12 @@ contract OnChainNFT is ERC721 {
 
 ## Royalties (EIP-2981)
 
+EIP-2981 reports royalty information; it does not force marketplaces to pay royalties. Verify current marketplace behavior rather than promising enforcement. The fragment assumes the imports shown earlier plus IERC165.
+
 ```solidity
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-contract NFTWithRoyalties is ERC721, IERC2981 {
+contract NFTWithRoyalties is ERC721, IERC2981, Ownable {
     address public royaltyRecipient;
     uint96 public royaltyFee = 500; // 5%
 
@@ -276,6 +297,7 @@ contract NFTWithRoyalties is ERC721, IERC2981 {
 
 ```solidity
 contract SoulboundToken is ERC721 {
+    uint256 private nextTokenId;
     constructor() ERC721("Soulbound", "SBT") {}
 
     function _beforeTokenTransfer(
@@ -289,7 +311,7 @@ contract SoulboundToken is ERC721 {
     }
 
     function mint(address to) external {
-        uint256 tokenId = totalSupply() + 1;
+        uint256 tokenId = ++nextTokenId; // Monotonic ID; burns never permit reuse.
         _safeMint(to, tokenId);
     }
 
@@ -393,7 +415,7 @@ contract OptimizedNFT is ERC721A {
 ## Marketplace Integration
 
 - OpenSea: ERC-721/1155, metadata standards
-- LooksRare: Royalty enforcement
+- Marketplace royalty behavior varies by policy/version; verify before making claims
 - Rarible: Protocol fees, lazy minting
 - Blur: Gas-optimized trading
 

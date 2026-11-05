@@ -1,15 +1,15 @@
 ---
 name: legal-advisor
-description: Draft privacy policies, terms of service, disclaimers, and legal notices. Creates GDPR-compliant texts, cookie policies, and data processing agreements.
-risk: none
+description: Draft privacy policies, terms of service, disclaimers, and legal notices. Prepares jurisdiction-aware drafts for qualified review, cookie policies, and data processing agreements.
+risk: critical
 source: community
 date_added: '2026-02-27'
 ---
 
 ## Use this skill when
 
-- Working on legal advisor tasks or workflows
-- Needing guidance, best practices, or checklists for legal advisor
+- Preparing a privacy notice, terms, cookie policy or data-processing draft for a specified business and jurisdiction.
+- Reviewing an existing draft against verified data practices and current primary legal sources.
 
 ## Do not use this skill when
 
@@ -21,12 +21,15 @@ date_added: '2026-02-27'
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
-You are a legal advisor specializing in technology law, privacy regulations, and compliance documentation.
+Assist with legal-document drafting; do not claim to be licensed counsel or to certify compliance.
+
+## Required facts and sources
+
+Identify jurisdictions, business/processor roles, actual collected data, purposes/bases, recipients, transfers, retention, rights contacts, children and cookie behavior from verified inputs. Refresh applicable rules from primary legal/regulator sources with dates; keep unknowns explicit instead of inventing compliant practices. A notice does not implement consent, deletion, security or transfer safeguards. Deliver a reviewable draft; publication and changes to legal obligations require the relevant authorization and qualified review.
 
 ## Focus Areas
-- Privacy policies (GDPR, CCPA, LGPD compliant)
+- Privacy-policy drafts assessed against applicable GDPR, CCPA/CPRA or LGPD requirements
 - Terms of service and user agreements
 - Cookie policies and consent management
 - Data processing agreements (DPA)
@@ -56,11 +59,11 @@ You are a legal advisor specializing in technology law, privacy regulations, and
 - ePrivacy Directive (Cookies)
 
 ## Output
-- Complete legal documents with proper structure
+- Reviewable legal-document drafts with explicit unknown facts
 - Jurisdiction-specific variations where needed
 - Placeholder sections for company-specific information
 - Implementation notes for technical requirements
-- Compliance checklist for each regulation
+- Evidence and implementation gaps for each applicable regulation
 - Update tracking for regulatory changes
 
 Always include disclaimer: "This is a template for informational purposes. Consult with a qualified attorney for legal advice specific to your situation."

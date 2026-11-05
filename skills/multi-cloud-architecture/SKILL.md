@@ -5,6 +5,9 @@ risk: safe
 source: community
 date_added: "2026-02-27"
 ---
+## Bundled upstream support
+
+Supporting files are included at skill-relative paths. See [UPSTREAM-NOTICE.md](UPSTREAM-NOTICE.md) for their pinned sources, licenses, hashes, and import changes.
 
 # Multi-Cloud Architecture
 
@@ -20,7 +23,6 @@ Decision framework and patterns for architecting applications across AWS, Azure,
 - Clarify goals, constraints, and required inputs.
 - Apply relevant best practices and validate outcomes.
 - Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Purpose
 
@@ -33,6 +35,8 @@ Design cloud-agnostic architectures and make informed decisions about service se
 - Select cloud services for specific workloads
 - Implement cloud-agnostic architectures
 - Optimize costs across providers
+
+Service rows group broad use cases, not drop-in equivalents. Azure SQL Database is not PostgreSQL/MySQL, Event Hubs Kafka compatibility is not the complete Kafka feature set, and S3-compatible APIs vary. Verify current service availability, regional/compliance constraints and actual application contracts. Multi-cloud replication needs explicit consistency/conflict, RPO/RTO, identity and failback design; geographic placement alone does not establish data sovereignty compliance. Measure dual-run operations, networking/egress, backups and team costs before committing; the 30–70% savings below is an illustrative historical range, not a quote or recommendation to buy commitments.
 
 ## Cloud Service Comparison
 
